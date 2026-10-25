@@ -115,7 +115,7 @@ If hosting your own endpoint on an internal web server or cloud storage, refer t
   "csed": 0.0010,
   "cpstgd": 0.0000,
   "parametrolamda": 0.0,
-  "dispbt": -10.77,
+  "dispbt": 1.107,
   "s1": 24.40,
   "s2": 23.50,
   "s3": 0.0135,
