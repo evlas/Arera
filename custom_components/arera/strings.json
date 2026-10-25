@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure ARERA Tariffs",
+        "description": "Select how to acquire regulated ARERA electricity tariffs (fixed, transport, system charges).",
+        "data": {
+          "source_type": "Acquisition Method",
+          "url": "JSON Endpoint URL (Local or Remote)",
+          "scan_interval": "Update frequency (hours)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to specified endpoint",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unknown error"
+    },
+    "abort": {
+      "already_configured": "ARERA Tariffs is already configured in Home Assistant"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ARERA Tariffs Options",
+        "description": "Modify endpoint URL or customize individual tariff parameters.",
+        "data": {
+          "url": "JSON Endpoint URL",
+          "scan_interval": "Update frequency (hours)"
+        }
+      }
+    }
+  }
+}
