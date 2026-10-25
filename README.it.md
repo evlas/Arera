@@ -9,18 +9,26 @@
 
 🌐 *[English version](README.md) | Versione in italiano*
 
-Integrazione professionale per **Home Assistant** per monitorare e acquisire le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) per il settore elettrico (servizi di trasmissione, distribuzione, misura, oneri generali di sistema ASOS e ARIM, e corrispettivi di dispacciamento per clienti domestici in bassa tensione).
+Integrazione professionale per **Home Assistant** per acquisire e monitorare automaticamente le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) per il settore elettrico italiano (servizi di trasmissione, distribuzione, misura contatore, oneri generali di sistema ASOS e ARIM, e corrispettivi di dispacciamento ed equalizzazione per clienti domestici in bassa tensione).
 
 ---
 
 ## 🚀 Caratteristiche Principali
 
-- **Acquisizione Automatica dei Dati**: Interroga periodicamente un endpoint JSON locale (es. `http://192.168.70.50/arera/arera.json`) o un URL remoto (es. GitHub o Gist).
-- **Valori Ufficiali Integrati (Fallback)**: Fornita con i valori ufficiali ARERA predefiniti aggiornati. Se l'endpoint non è raggiungibile o non viene fornito un URL, l'integrazione non va mai in errore e garantisce continuità di funzionamento.
-- **Configurazione 100% da WebUI (Config Flow & Options Flow)**: Impostazione guidata dell'URL dell'endpoint e della frequenza di aggiornamento (in ore) da *Impostazioni -> Dispositivi e Servizi*.
-- **Personalizzazione e Override nelle Opzioni**: Possibilità di modificare in qualsiasi momento singoli valori delle componenti regolate (es. $\sigma_1$, $\sigma_2$, $\sigma_3$, ASOS, ARIM).
-- **Organizzazione Pulita del Dispositivo**: Tutte le componenti tariffarie sono raggruppate sotto un unico dispositivo nativo: **ARERA Tariffe Regolate**.
-- **Progettata per l'Integrazione Compagna**: Perfettamente integrabile con [Bolletta Elettrica](https://github.com/evlas/Bolletta) per il calcolo trasparente e completo della bolletta con il proprio fornitore.
+- **Download Automatico Live dai Server Ufficiali ARERA (Predefinito)**:
+  - Scarica e analizza periodicamente i file Excel ufficiali pubblicati su `arera.it`:
+    1. **`stg_domesticiNonVulnerabili.xlsx`**: per le tariffe di rete, trasmissione, distribuzione, misura, perequazione ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$) e oneri generali di sistema (ASOS, ARIM).
+    2. **`E{anno}-smt.xlsx`**: per i corrispettivi del servizio di tutela e dispacciamento, estraendo dinamicamente in tempo reale la componente **DispBT** (Delibera ARERA 218/2026/R/eel).
+- **Valori Ufficiali Integrati (Fallback Robusto)**:
+  - Include i valori ufficiali ARERA predefiniti. Se i server ARERA o la connessione di rete sono temporaneamente non disponibili, l'integrazione non va mai in errore e garantisce continuità assoluta ai calcoli della bolletta.
+- **Configurazione 100% da WebUI (Config Flow & Options Flow)**:
+  - Configurazione guidata tramite interfaccia grafica: scegli la modalità (Tabelle Ufficiali ARERA, URL Personalizzato, oppure Valori Manuali) e imposta l'intervallo di aggiornamento (default: 24 ore).
+- **Personalizzazione e Override nelle Opzioni**:
+  - Puoi modificare in qualunque momento qualunque singola componente regolata tramite il menu **Opzioni** dell'integrazione senza riavviare Home Assistant.
+- **Organizzazione Pulita del Dispositivo**:
+  - Tutte le 14 componenti tariffarie e diagnostiche sono organizzate sotto un unico dispositivo nativo: **ARERA Tariffe Regolate**.
+- **Progettata per l'Integrazione Compagna Bolletta**:
+  - Fornisce automaticamente a [Bolletta Elettrica](https://github.com/evlas/Bolletta) tutte le quote fisse e variabili aggiornate (incluso `sensor.arera_dispbt`) per il calcolo trasparente e preciso del costo finito dell'energia.
 
 ---
 
@@ -50,30 +58,32 @@ Integrazione professionale per **Home Assistant** per monitorare e acquisire le 
 1. Nella WebUI di Home Assistant, vai su **Impostazioni** -> **Dispositivi e Servizi**.
 2. Clicca su **Aggiungi Integrazione** in basso a destra.
 3. Cerca **ARERA Tariffe Luce**.
-4. Seleziona la modalità:
-   - **URL JSON (Locale o Remoto)**: Inserisci l'URL dell'endpoint (predefinito: `http://192.168.70.50/arera/arera.json`) e la frequenza di aggiornamento (default: `24` ore).
-   - **Manuale / Valori Ufficiali Predefiniti**: Utilizza i valori ARERA ufficiali integrati e modificali a piacimento tramite le Opzioni.
+4. Seleziona la sorgente dei dati:
+   - **Tabelle Ufficiali ARERA (XLSX online)** *(Consigliato / Predefinito)*: Scarica automaticamente via rete sia `stg_domesticiNonVulnerabili.xlsx` che `E{anno}-smt.xlsx` direttamente dal portale ufficiale ARERA.
+   - **URL Personalizzato (JSON o XLSX)**: Inserisci l'URL di un tuo server web locale o endpoint cloud (es. `http://192.168.1.100/arera.json` o file Excel).
+   - **Manuale / Valori Ufficiali Predefiniti**: Utilizza i valori predefiniti integrati e modificali a piacimento tramite il menu Opzioni.
+5. Imposta la frequenza di aggiornamento desiderata (default: `24` ore).
 
 ---
 
 ## 📑 Entità Create
 
-| Entità | Descrizione | Unità | Componente ARERA |
+| Entità | Descrizione | Unità | Fonte / Componente ARERA |
 | :--- | :--- | :--- | :--- |
-| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ |
-| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ |
-| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ |
-| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ |
-| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ |
-| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ |
-| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ |
-| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ |
-| `sensor.arera_dispbt` | Componente DispBT Bassa Tensione | EUR/anno | $\text{DispBT}$ |
-| `sensor.arera_cdispd` | Corrispettivo Dispacciamento Domestici | EUR/kWh | $\text{CDISPD}$ |
-| `sensor.arera_csed` | Corrispettivo Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ |
-| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ |
-| `sensor.arera_parametro_lamda` | Parametro Lambda | EUR/anno | $\lambda$ |
-| `sensor.arera_ultimo_aggiornamento` | Data/ora dell'ultimo aggiornamento tariffe | - | - |
+| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_dispbt` | Corrispettivo di Dispacciamento BT | EUR/anno | $\text{DispBT}$ (estratto live da `E{anno}-smt.xlsx`) |
+| `sensor.arera_cdispd` | Corrispettivo Dispacciamento Domestici | EUR/kWh | $\text{CDISPD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_csed` | Corrispettivo Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_parametro_lamda` | Parametro Lambda Servizio Tutele Graduali | EUR/anno | $\lambda$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_ultimo_aggiornamento` | Data e ora dell'ultimo aggiornamento eseguito | - | Timestamp locale |
 
 ---
 
@@ -97,33 +107,33 @@ entities:
   - entity: sensor.arera_uc3
     name: Perequazione UC3
   - entity: sensor.arera_dispbt
-    name: Componente DispBT
+    name: Componente DispBT (E*-smt)
   - entity: sensor.arera_ultimo_aggiornamento
     name: Ultimo Aggiornamento
 ```
 
 ---
 
-## 📄 Schema JSON di Riferimento
+## 📄 Schema JSON Personalizzato (Opzionale)
 
-Se utilizzi un tuo server web locale o storage remoto, fai riferimento al file d'esempio [`arera_sample.json`](arera_sample.json):
+Se scegli la modalità ad endpoint JSON locale o remoto, fai riferimento allo schema d'esempio [`arera_sample.json`](arera_sample.json):
 
 ```json
 {
-  "today": "2024-10-01",
-  "cdispd": 0.0018,
-  "csed": 0.0010,
-  "cpstgd": 0.0000,
-  "parametrolamda": 0.0,
+  "today": "2026-10-01",
+  "cdispd": 0.019902,
+  "csed": 0.00056,
+  "cpstgd": 0.00214,
+  "parametrolamda": -73.1637,
   "dispbt": 1.107,
-  "s1": 24.40,
-  "s2": 23.50,
-  "s3": 0.0135,
-  "uc3": 0.0016,
-  "uc6qe": 0.0001,
-  "uc6qp": 0.0000,
-  "asos": 0.0345,
-  "arim": 0.0090
+  "s1": 23.04,
+  "s2": 23.52,
+  "s3": 0.0119,
+  "uc3": 0.00276,
+  "uc6qe": 0.00007,
+  "uc6qp": 0.1988,
+  "asos": 0.028657,
+  "arim": 0.001638
 }
 ```
 
@@ -131,7 +141,7 @@ Se utilizzi un tuo server web locale o storage remoto, fai riferimento al file d
 
 ## 🛠️ Integrazione Compagna
 
-Per calcolare il costo dinamico finito della bolletta con il tuo fornitore:
+Per calcolare il costo dinamico finito della bolletta elettrica con il tuo fornitore:
 - 🔗 **[Bolletta Elettrica](https://github.com/evlas/Bolletta)**
 
 ---

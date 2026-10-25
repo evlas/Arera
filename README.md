@@ -9,18 +9,26 @@
 
 🌐 *English | [Versione in italiano](README.it.md)*
 
-Professional **Home Assistant** integration to monitor and acquire regulated Italian electricity tariffs set by **ARERA** (Regulatory Authority for Energy, Networks and Environment), including transmission, distribution, metering, system charges (ASOS, ARIM), and dispatching components for low-voltage domestic customers.
+Professional **Home Assistant** integration to automatically acquire and monitor Italian regulated electricity tariffs established by **ARERA** (Regulatory Authority for Energy, Networks and Environment), including transmission, distribution, metering, general system charges (ASOS, ARIM), and low-voltage domestic dispatching/equalization fees.
 
 ---
 
 ## 🚀 Key Features
 
-- **Automated Data Retrieval**: Periodically fetches updated tariff parameters from a local or remote JSON endpoint (e.g. `http://192.168.70.50/arera/arera.json` or online GitHub/Gist).
-- **Official Built-in Fallbacks**: Ships with current official ARERA low-voltage domestic tariff defaults. If your endpoint is temporarily unreachable or not set, the integration never fails and smoothly falls back to verified values.
-- **100% WebUI Configuration (Config Flow & Options Flow)**: Setup endpoint URL and polling interval (in hours) directly from *Settings -> Devices & Services*.
-- **Fine-Grained Parameter Overrides**: Override any individual regulated component (e.g. $\sigma_1$, $\sigma_2$, $\sigma_3$, ASOS, ARIM) anytime via the **Options** flow.
-- **Dedicated Device Organization**: Automatically groups all regulated tariff components cleanly under a single device: **ARERA Tariffe Regolate**.
-- **Designed for Companion Integrations**: Works seamlessly with the companion [Bolletta Elettrica](https://github.com/evlas/Bolletta) integration to calculate complete electricity bills.
+- **Direct Live Download from Official ARERA Servers (Default)**:
+  - Periodically downloads and parses official Excel tables published on `arera.it`:
+    1. **`stg_domesticiNonVulnerabili.xlsx`**: for grid tariffs, transmission, distribution, metering, equalization ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$), and general system charges (ASOS, ARIM).
+    2. **`E{year}-smt.xlsx`**: for regulated standard offer fees, extracting the **DispBT** component live in real-time (ARERA Resolution 218/2026/R/eel).
+- **Official Built-in Fallbacks**:
+  - Preloaded with verified official ARERA values. If ARERA servers or network connections are temporarily unreachable, the integration never fails and maintains continuous bill calculation.
+- **100% WebUI Configuration (Config Flow & Options Flow)**:
+  - Guided setup via graphical UI: choose your data source (Official ARERA Tables, Custom URL, or Manual Values) and polling interval (default: 24 hours).
+- **Fine-Grained Parameter Overrides**:
+  - Override any individual regulated component anytime via the **Options** menu without restarting Home Assistant.
+- **Clean Dedicated Device Organization**:
+  - All 14 tariff and diagnostic entities are cleanly grouped under a single native device: **ARERA Tariffe Regolate**.
+- **Designed for Companion Integrations**:
+  - Automatically supplies [Bolletta Elettrica](https://github.com/evlas/Bolletta) with all updated fixed and variable charges (including `sensor.arera_dispbt`) for transparent, exact bill calculations.
 
 ---
 
@@ -51,29 +59,31 @@ Professional **Home Assistant** integration to monitor and acquire regulated Ita
 2. Click **Add Integration** in the bottom right corner.
 3. Search for **ARERA Tariffe Luce**.
 4. Choose your acquisition mode:
-   - **JSON URL (Local or Remote)**: Enter the URL of your endpoint (default: `http://192.168.70.50/arera/arera.json`) and the polling interval (default: `24` hours).
-   - **Manual / Official Defaults**: Use built-in official ARERA values and customize them whenever you want via Options.
+   - **Official ARERA Tables (XLSX online)** *(Recommended / Default)*: Downloads both `stg_domesticiNonVulnerabili.xlsx` and `E{year}-smt.xlsx` directly from the official ARERA portal.
+   - **Custom URL (JSON or XLSX)**: Specify a custom URL from a local web server or cloud endpoint (e.g. `http://192.168.1.100/arera.json` or Excel file).
+   - **Manual / Official Defaults**: Use built-in default values and customize them whenever you want via Options.
+5. Set the polling interval (default: `24` hours).
 
 ---
 
 ## 📑 Entities Created
 
-| Entity | Description | Unit | ARERA Component |
+| Entity | Description | Unit | ARERA Component / Source |
 | :--- | :--- | :--- | :--- |
-| `sensor.arera_quota_fissa` | Fixed transport and metering fee | EUR/year | $\sigma_1$ |
-| `sensor.arera_quota_potenza` | Power capacity transport fee | EUR/kW/year | $\sigma_2$ |
-| `sensor.arera_quota_energia` | Energy volume transport fee | EUR/kWh | $\sigma_3$ |
-| `sensor.arera_uc3` | Transport equalization component | EUR/kWh | $\text{UC}_3$ |
-| `sensor.arera_uc6_qe` | Service quality recovery - Energy rate | EUR/kWh | $\text{UC}_{6\text{qe}}$ |
-| `sensor.arera_uc6_qp` | Service quality recovery - Capacity rate | EUR/kW/year | $\text{UC}_{6\text{qp}}$ |
-| `sensor.arera_asos` | Renewable energy support system charge | EUR/kWh | $\text{ASOS}$ |
-| `sensor.arera_arim` | Remaining general system charges | EUR/kWh | $\text{ARIM}$ |
-| `sensor.arera_dispbt` | Low-voltage dispatch compensation | EUR/year | $\text{DispBT}$ |
-| `sensor.arera_cdispd` | Domestic wholesale dispatching component | EUR/kWh | $\text{CDISPD}$ |
-| `sensor.arera_csed` | Efficient balancing component | EUR/kWh | $\text{CSED}$ |
-| `sensor.arera_cpstgd` | Gradual protections equalization | EUR/kWh | $\text{CPSTGD}$ |
-| `sensor.arera_parametro_lamda` | Lambda parameter | EUR/year | $\lambda$ |
-| `sensor.arera_ultimo_aggiornamento` | Timestamp of last tariff update | - | - |
+| `sensor.arera_quota_fissa` | Fixed transport and metering fee | EUR/year | $\sigma_1$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_potenza` | Power capacity transport fee | EUR/kW/year | $\sigma_2$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_energia` | Energy volume transport fee | EUR/kWh | $\sigma_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc3` | Transport equalization component | EUR/kWh | $\text{UC}_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qe` | Service quality recovery - Energy rate | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qp` | Service quality recovery - Capacity rate | EUR/kW/year | $\text{UC}_{6\text{qp}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_asos` | Renewable energy support system charge | EUR/kWh | $\text{ASOS}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_arim` | Remaining general system charges | EUR/kWh | $\text{ARIM}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_dispbt` | Low-voltage dispatch compensation | EUR/year | $\text{DispBT}$ (extracted live from `E{year}-smt.xlsx`) |
+| `sensor.arera_cdispd` | Domestic wholesale dispatching component | EUR/kWh | $\text{CDISPD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_csed` | Efficient balancing component | EUR/kWh | $\text{CSED}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cpstgd` | Gradual protections equalization | EUR/kWh | $\text{CPSTGD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_parametro_lamda` | Lambda parameter | EUR/year | $\lambda$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_ultimo_aggiornamento` | Timestamp of last tariff update | - | Local timestamp |
 
 ---
 
@@ -97,33 +107,33 @@ entities:
   - entity: sensor.arera_uc3
     name: Perequazione UC3
   - entity: sensor.arera_dispbt
-    name: Componente DispBT
+    name: Componente DispBT (E*-smt)
   - entity: sensor.arera_ultimo_aggiornamento
     name: Ultimo Aggiornamento
 ```
 
 ---
 
-## 📄 JSON Schema Example
+## 📄 Custom JSON Schema (Optional)
 
 If hosting your own endpoint on an internal web server or cloud storage, refer to [`arera_sample.json`](arera_sample.json):
 
 ```json
 {
-  "today": "2024-10-01",
-  "cdispd": 0.0018,
-  "csed": 0.0010,
-  "cpstgd": 0.0000,
-  "parametrolamda": 0.0,
+  "today": "2026-10-01",
+  "cdispd": 0.019902,
+  "csed": 0.00056,
+  "cpstgd": 0.00214,
+  "parametrolamda": -73.1637,
   "dispbt": 1.107,
-  "s1": 24.40,
-  "s2": 23.50,
-  "s3": 0.0135,
-  "uc3": 0.0016,
-  "uc6qe": 0.0001,
-  "uc6qp": 0.0000,
-  "asos": 0.0345,
-  "arim": 0.0090
+  "s1": 23.04,
+  "s2": 23.52,
+  "s3": 0.0119,
+  "uc3": 0.00276,
+  "uc6qe": 0.00007,
+  "uc6qp": 0.1988,
+  "asos": 0.028657,
+  "arim": 0.001638
 }
 ```
 
