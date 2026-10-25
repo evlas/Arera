@@ -1,0 +1,11 @@
+{
+  "domain": "arera",
+  "name": "ARERA Tariffe Luce",
+  "codeowners": ["@evlas"],
+  "config_flow": true,
+  "documentation": "https://github.com/evlas/Arera",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/evlas/Arera/issues",
+  "version": "1.0.0"
+}
