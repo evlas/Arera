@@ -6,111 +6,85 @@ CONF_SOURCE_TYPE = "source_type"
 CONF_URL = "url"
 CONF_SCAN_INTERVAL = "scan_interval"
 
-SOURCE_TYPE_URL = "url"
+SOURCE_TYPE_ARERA_XLSX = "arera_xlsx"
+SOURCE_TYPE_CUSTOM_URL = "custom_url"
 SOURCE_TYPE_MANUAL = "manual"
 
-DEFAULT_URL = "http://192.168.70.50/arera/arera.json"
+OFFICIAL_ARERA_XLSX_URL = "https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/stg_domesticiNonVulnerabili.xlsx"
+DEFAULT_URL = OFFICIAL_ARERA_XLSX_URL
 DEFAULT_SCAN_INTERVAL_HOURS = 24
 
-# Valori di default ARERA (aggiornati per clienti domestici BT)
+# Valori di fallback/default ARERA (estratti dalla tabella ufficiale ARERA per clienti domestici residenti BT)
 DEFAULT_ARERA_VALUES = {
-    "s1": 24.40,            # Quota Fissa (€/anno)
-    "s2": 23.50,            # Quota Potenza (€/kW/anno)
-    "s3": 0.0135,           # Quota Energia (€/kWh)
-    "uc3": 0.0016,          # UC3 (€/kWh)
-    "uc6qe": 0.0001,        # UC6 Quota Energia (€/kWh)
-    "uc6qp": 0.0000,        # UC6 Quota Potenza (€/kW/anno)
-    "asos": 0.0345,         # Asos (€/kWh)
-    "arim": 0.0090,         # Arim (€/kWh)
+    "s1": 23.04,            # Quota Fissa Trasporto e Misura (€/anno)
+    "s2": 23.52,            # Quota Potenza Trasporto e Misura (€/kW/anno)
+    "s3": 0.0119,           # Quota Energia Trasporto e Misura (€/kWh)
+    "uc3": 0.00276,         # UC3 Perequazione (€/kWh)
+    "uc6qe": 0.00007,       # UC6 Quota Energia (€/kWh)
+    "uc6qp": 0.1988,        # UC6 Quota Potenza (€/kW/anno)
+    "asos": 0.028657,       # ASOS Rinnovabili (€/kWh)
+    "arim": 0.001638,       # ARIM Altri Oneri (€/kWh)
     "dispbt": -10.77,       # DispBT (€/anno)
-    "cdispd": 0.0018,       # CDISPD (€/kWh)
-    "csed": 0.0010,         # CSED (€/kWh)
-    "cpstgd": 0.0000,       # CPSTGD (€/kWh)
-    "parametrolamda": 0.0,  # Parametro lambda (€/anno)
+    "cdispd": 0.019902,     # CDISPD (€/kWh)
+    "csed": 0.00056,        # CSED (€/kWh)
+    "cpstgd": 0.00214,      # CPSTGD (€/kWh)
+    "parametrolamda": -73.1637,  # Parametro gamma/lambda STG (€/anno)
 }
 
 SENSOR_TYPES = {
     "s1": {
-        "name": "Arera Quota Fissa",
-        "entity_id": "sensor.arera_quota_fissa",
         "unit": "€/anno",
         "icon": "mdi:currency-eur",
     },
     "s2": {
-        "name": "Arera Quota Potenza",
-        "entity_id": "sensor.arera_quota_potenza",
         "unit": "€/kW/anno",
         "icon": "mdi:flash",
     },
     "s3": {
-        "name": "Arera Quota Energia",
-        "entity_id": "sensor.arera_quota_energia",
         "unit": "€/kWh",
         "icon": "mdi:transmission-tower",
     },
     "uc3": {
-        "name": "Arera UC3",
-        "entity_id": "sensor.arera_uc3",
         "unit": "€/kWh",
         "icon": "mdi:scale-balance",
     },
     "uc6qe": {
-        "name": "Arera UC6 QE",
-        "entity_id": "sensor.arera_uc6_qe",
         "unit": "€/kWh",
         "icon": "mdi:scale-balance",
     },
     "uc6qp": {
-        "name": "Arera UC6 QP",
-        "entity_id": "sensor.arera_uc6_qp",
         "unit": "€/kW/anno",
         "icon": "mdi:scale-balance",
     },
     "asos": {
-        "name": "Arera Asos",
-        "entity_id": "sensor.arera_asos",
         "unit": "€/kWh",
         "icon": "mdi:solar-power",
     },
     "arim": {
-        "name": "Arera Arim",
-        "entity_id": "sensor.arera_arim",
         "unit": "€/kWh",
         "icon": "mdi:chart-timeline-variant",
     },
     "dispbt": {
-        "name": "Arera DispBT",
-        "entity_id": "sensor.arera_dispbt",
         "unit": "€/anno",
         "icon": "mdi:transmission-tower-export",
     },
     "cdispd": {
-        "name": "Arera CDISPD",
-        "entity_id": "sensor.arera_cdispd",
         "unit": "€/kWh",
         "icon": "mdi:transmission-tower",
     },
     "csed": {
-        "name": "Arera CSED",
-        "entity_id": "sensor.arera_csed",
         "unit": "€/kWh",
         "icon": "mdi:scale-balance",
     },
     "cpstgd": {
-        "name": "Arera CPSTGD",
-        "entity_id": "sensor.arera_cpstgd",
         "unit": "€/kWh",
         "icon": "mdi:scale-balance",
     },
     "parametrolamda": {
-        "name": "Arera Parametro lamda",
-        "entity_id": "sensor.arera_parametro_lamda",
         "unit": "€/anno",
         "icon": "mdi:lambda",
     },
     "today": {
-        "name": "Arera Ultimo Aggiornamento",
-        "entity_id": "sensor.arera_ultimo_aggiornamento",
         "unit": None,
         "icon": "mdi:calendar-clock",
     },

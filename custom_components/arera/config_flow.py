@@ -17,8 +17,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL_HOURS,
     DEFAULT_URL,
     DOMAIN,
+    OFFICIAL_ARERA_XLSX_URL,
+    SOURCE_TYPE_ARERA_XLSX,
+    SOURCE_TYPE_CUSTOM_URL,
     SOURCE_TYPE_MANUAL,
-    SOURCE_TYPE_URL,
 )
 
 
@@ -34,9 +36,12 @@ class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Previeni doppie istanze ARERA se già configurata
             await self.async_set_unique_id("arera_tariffe_luce")
             self._abort_if_unique_id_configured()
+
+            # Se ha scelto l'Excel ufficiale, imposta l'URL ufficiale ARERA
+            if user_input.get(CONF_SOURCE_TYPE) == SOURCE_TYPE_ARERA_XLSX:
+                user_input[CONF_URL] = OFFICIAL_ARERA_XLSX_URL
 
             return self.async_create_entry(
                 title="ARERA Tariffe Luce",
@@ -46,10 +51,11 @@ class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_SOURCE_TYPE, default=SOURCE_TYPE_URL
+                    CONF_SOURCE_TYPE, default=SOURCE_TYPE_ARERA_XLSX
                 ): vol.In(
                     {
-                        SOURCE_TYPE_URL: "URL Remoto / Locale (JSON)",
+                        SOURCE_TYPE_ARERA_XLSX: "Tabella Ufficiale ARERA Online (.xlsx)",
+                        SOURCE_TYPE_CUSTOM_URL: "URL Personalizzato (JSON o Excel locale/remoto)",
                         SOURCE_TYPE_MANUAL: "Valori Ufficiali Predefiniti / Manuale",
                     }
                 ),

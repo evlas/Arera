@@ -3,18 +3,18 @@
     "step": {
       "user": {
         "title": "Configura ARERA Tariffe Luce",
-        "description": "Seleziona come reperire le tariffe regolate ARERA (quote fisse, trasporto, oneri di sistema).",
+        "description": "Seleziona come reperire le tariffe regolate ARERA (quote fisse, trasporto, oneri di sistema). Predefinito: file Excel ufficiale ARERA online.",
         "data": {
-          "source_type": "Metodo di Acquisizione",
-          "url": "URL Endpoint JSON (Locale o Remoto)",
+          "source_type": "Sorgente Dati",
+          "url": "URL File Excel Ufficiale o Endpoint JSON",
           "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Impossibile connettersi all'endpoint specificato",
+      "cannot_connect": "Impossibile scaricare o elaborare i dati dalla sorgente",
       "invalid_auth": "Autenticazione non valida",
-      "unknown": "Errore sconosciuto"
+      "unknown": "Errore imprevisto"
     },
     "abort": {
       "already_configured": "ARERA Tariffe è già configurato in Home Assistant"
@@ -24,9 +24,9 @@
     "step": {
       "init": {
         "title": "Opzioni ARERA Tariffe",
-        "description": "Modifica l'URL dell'endpoint o imposta valori personalizzati per le componenti tariffarie.",
+        "description": "Modifica l'URL della sorgente o imposta valori personalizzati per le singole componenti tariffarie.",
         "data": {
-          "url": "URL Endpoint JSON",
+          "url": "URL File Excel o Endpoint JSON",
           "scan_interval": "Frequenza aggiornamento (ore)"
         }
       }

@@ -17,9 +17,12 @@ from .const import (
     CONF_URL,
     DEFAULT_ARERA_VALUES,
     DEFAULT_SCAN_INTERVAL_HOURS,
+    DEFAULT_URL,
     DOMAIN,
-    SOURCE_TYPE_URL,
+    OFFICIAL_ARERA_XLSX_URL,
+    SOURCE_TYPE_MANUAL,
 )
+from .parser import parse_arera_xlsx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +33,10 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, config_entry) -> None:
         """Inizializza il coordinator."""
         self.entry = config_entry
-        self.source_type = config_entry.data.get(CONF_SOURCE_TYPE, SOURCE_TYPE_URL)
-        self.url = config_entry.data.get(CONF_URL, "")
+        self.source_type = config_entry.data.get(CONF_SOURCE_TYPE, "arera_xlsx")
+        self.url = config_entry.options.get(
+            CONF_URL, config_entry.data.get(CONF_URL, DEFAULT_URL)
+        )
         scan_interval_hours = config_entry.options.get(
             "scan_interval",
             config_entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL_HOURS),
@@ -45,7 +50,7 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Recupera i dati dal server o usa i dati di fallback/configurati."""
+        """Recupera i dati da ARERA o usa i dati di fallback/configurati."""
         data: dict[str, Any] = dict(DEFAULT_ARERA_VALUES)
         data["today"] = datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -57,42 +62,51 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 except (ValueError, TypeError):
                     pass
 
-        # Se la modalità è URL, tenta la chiamata HTTP
-        if self.source_type == SOURCE_TYPE_URL and self.url:
+        # Se la modalità non è manuale ed è presente un URL, tenta il download
+        if self.source_type != SOURCE_TYPE_MANUAL and self.url:
             try:
                 session = async_get_clientsession(self.hass)
-                async with async_timeout.timeout(15):
-                    async with session.get(self.url) as response:
+                # Imposta header User-Agent per compatibilità arera.it
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+                async with async_timeout.timeout(30):
+                    async with session.get(self.url, headers=headers) as response:
                         if response.status == 200:
-                            json_data = await response.json(content_type=None)
-                            if isinstance(json_data, dict):
-                                _LOGGER.debug("Dati ARERA ricevuti con successo: %s", json_data)
-                                for k, v in json_data.items():
-                                    k_lower = k.lower().replace("_", "")
-                                    # Normalizza chiavi comuni
-                                    matched_key = None
-                                    for default_k in DEFAULT_ARERA_VALUES:
-                                        if default_k.lower() == k_lower:
-                                            matched_key = default_k
-                                            break
-                                    if matched_key:
-                                        try:
-                                            data[matched_key] = float(v)
-                                        except (ValueError, TypeError):
-                                            pass
-                                    elif k_lower in ("today", "data", "date", "aggiornamento"):
-                                        data["today"] = str(v)
+                            content = await response.read()
+                            # Verifica se è un file zip/xlsx (magic number PK\x03\x04)
+                            if content.startswith(b"PK\x03\x04") or ".xlsx" in self.url.lower():
+                                _LOGGER.debug("File Excel ARERA ricevuto (%d byte), avvio parsing...", len(content))
+                                parsed = parse_arera_xlsx(content)
+                                data.update(parsed)
                             else:
-                                _LOGGER.warning("Risposta ARERA non è un JSON valido: %s", json_data)
+                                # Prova come JSON
+                                try:
+                                    import json
+                                    json_data = json.loads(content.decode("utf-8", errors="ignore"))
+                                    if isinstance(json_data, dict):
+                                        _LOGGER.debug("Dati JSON ARERA ricevuti con successo: %s", json_data)
+                                        for k, v in json_data.items():
+                                            k_lower = k.lower().replace("_", "")
+                                            for default_k in DEFAULT_ARERA_VALUES:
+                                                if default_k.lower() == k_lower:
+                                                    try:
+                                                        data[default_k] = float(v)
+                                                    except (ValueError, TypeError):
+                                                        pass
+                                            if k_lower in ("today", "data", "date", "aggiornamento"):
+                                                data["today"] = str(v)
+                                except Exception as json_err:
+                                    _LOGGER.warning("Risposta ARERA non riconosciuta come Excel né JSON: %s", json_err)
                         else:
                             _LOGGER.warning(
-                                "Errore HTTP %s recuperando i dati ARERA da %s. Verranno usati i dati di fallback.",
+                                "Errore HTTP %s recuperando i dati ARERA da %s. Vengono usati i valori di fallback.",
                                 response.status,
                                 self.url,
                             )
             except Exception as err:
                 _LOGGER.warning(
-                    "Impossibile contattare l'endpoint ARERA %s (%s). Vengono utilizzati i valori predefiniti.",
+                    "Impossibile contattare la sorgente ARERA %s (%s). Vengono utilizzati i valori predefiniti.",
                     self.url,
                     err,
                 )
