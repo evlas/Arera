@@ -1,4 +1,4 @@
-# ARERA Tariffe Luce - Integrazione Home Assistant
+# ARERA Tariffe Energia Elettrica - Integrazione Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/default)
 [![GitHub Release](https://img.shields.io/github/v/release/evlas/Arera?color=blue&style=flat-square)](https://github.com/evlas/Arera/releases)
@@ -9,7 +9,11 @@
 
 🌐 *[English version](README.md) | Versione in italiano*
 
-Integrazione professionale per **Home Assistant** per acquisire e monitorare automaticamente le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) per il settore elettrico italiano (servizi di trasmissione, distribuzione, misura contatore, oneri generali di sistema ASOS e ARIM, e corrispettivi di dispacciamento ed equalizzazione per clienti domestici in bassa tensione).
+Integrazione professionale per **Home Assistant** per acquisire e monitorare automaticamente le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) specificamente per il settore dell'**Energia Elettrica** (servizi di trasmissione, distribuzione, misura contatore, oneri generali di sistema ASOS e ARIM, e corrispettivi di dispacciamento ed equalizzazione per clienti domestici in bassa tensione).
+
+> [!IMPORTANT]
+> **Ambito di Applicazione: Solo Energia Elettrica**
+> Questa integrazione è dedicata esclusivamente al settore dell'**Energia Elettrica (Luce)** per utenze domestiche in bassa tensione (BT). Fornisce in tempo reale tutte le componenti regolate necessarie al calcolo della bolletta elettrica. Non include tariffe per il gas naturale o altri servizi regolati da ARERA.
 
 ---
 

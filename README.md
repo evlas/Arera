@@ -1,4 +1,4 @@
-# ARERA Tariffe Luce - Home Assistant Integration
+# ARERA Tariffe Energia Elettrica - Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/default)
 [![GitHub Release](https://img.shields.io/github/v/release/evlas/Arera?color=blue&style=flat-square)](https://github.com/evlas/Arera/releases)
@@ -9,7 +9,11 @@
 
 🌐 *English | [Versione in italiano](README.it.md)*
 
-Professional **Home Assistant** integration to automatically acquire and monitor Italian regulated electricity tariffs established by **ARERA** (Regulatory Authority for Energy, Networks and Environment), including transmission, distribution, metering, general system charges (ASOS, ARIM), and low-voltage domestic dispatching/equalization fees.
+Professional **Home Assistant** integration to automatically acquire and monitor Italian regulated tariffs established by **ARERA** (Regulatory Authority for Energy, Networks and Environment) specifically for the **Electricity Sector** (*Energia Elettrica*), including transmission, distribution, metering, general system charges (ASOS, ARIM), and low-voltage domestic dispatching/equalization fees.
+
+> [!IMPORTANT]
+> **Scope: Electricity Sector Only (Energia Elettrica)**
+> This integration is dedicated exclusively to the **Italian Electricity Sector** for domestic low-voltage customers. It provides all regulated components required for electricity bill calculations in real time. It does not cover natural gas, water, or other ARERA-regulated public services.
 
 ---
 
