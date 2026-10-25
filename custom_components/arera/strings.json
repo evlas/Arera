@@ -31,5 +31,51 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "s1": {
+        "name": "Fixed transport fee (s1)"
+      },
+      "s2": {
+        "name": "Power capacity transport fee (s2)"
+      },
+      "s3": {
+        "name": "Energy volume transport fee (s3)"
+      },
+      "uc3": {
+        "name": "Equalization UC3"
+      },
+      "uc6qe": {
+        "name": "UC6 energy rate"
+      },
+      "uc6qp": {
+        "name": "UC6 capacity rate"
+      },
+      "asos": {
+        "name": "Renewable system charge (ASOS)"
+      },
+      "arim": {
+        "name": "Remaining system charges (ARIM)"
+      },
+      "dispbt": {
+        "name": "Dispatch component DispBT"
+      },
+      "cdispd": {
+        "name": "Domestic wholesale dispatching CDISPD"
+      },
+      "csed": {
+        "name": "Efficient balancing CSED"
+      },
+      "cpstgd": {
+        "name": "Gradual protections equalization CPSTGD"
+      },
+      "parametrolamda": {
+        "name": "Lambda parameter"
+      },
+      "today": {
+        "name": "Last update"
+      }
+    }
   }
 }

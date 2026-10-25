@@ -31,5 +31,51 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "s1": {
+        "name": "Quota fissa trasporto (s1)"
+      },
+      "s2": {
+        "name": "Quota potenza trasporto (s2)"
+      },
+      "s3": {
+        "name": "Quota energia trasporto (s3)"
+      },
+      "uc3": {
+        "name": "Perequazione UC3"
+      },
+      "uc6qe": {
+        "name": "UC6 quota energia"
+      },
+      "uc6qp": {
+        "name": "UC6 quota potenza"
+      },
+      "asos": {
+        "name": "Oneri rinnovabili (ASOS)"
+      },
+      "arim": {
+        "name": "Altri oneri di sistema (ARIM)"
+      },
+      "dispbt": {
+        "name": "Componente di dispacciamento DispBT"
+      },
+      "cdispd": {
+        "name": "Dispacciamento domestici CDISPD"
+      },
+      "csed": {
+        "name": "Sbilanciamento efficiente CSED"
+      },
+      "cpstgd": {
+        "name": "Perequazione tutele graduali CPSTGD"
+      },
+      "parametrolamda": {
+        "name": "Parametro lambda"
+      },
+      "today": {
+        "name": "Ultimo aggiornamento"
+      }
+    }
   }
 }

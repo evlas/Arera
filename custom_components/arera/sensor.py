@@ -48,7 +48,7 @@ class AreraSensor(CoordinatorEntity[AreraDataUpdateCoordinator], SensorEntity):
         """Inizializza il sensore."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = meta["name"]
+        self._attr_translation_key = key
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_native_unit_of_measurement = meta.get("unit")
         self._attr_icon = meta.get("icon", "mdi:cash")
