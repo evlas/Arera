@@ -86,9 +86,20 @@ class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class AreraOptionsFlowHandler(config_entries.OptionsFlow):
     """Gestione dell'Options Flow per ARERA."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Inizializza."""
-        self.config_entry = config_entry
+    def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
+        """Inizializza evitando l'assegnazione diretta a self.config_entry (read-only su HA recente)."""
+        self._config_entry_compat = config_entry
+
+    @property
+    def config_entry(self) -> config_entries.ConfigEntry:
+        """Restituisce il config entry in modo compatibile sia con vecchie che con nuove versioni di HA."""
+        try:
+            entry = super().config_entry
+            if entry is not None:
+                return entry
+        except Exception:
+            pass
+        return self._config_entry_compat
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -97,25 +108,21 @@ class AreraOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current_url = self.config_entry.options.get(
-            CONF_URL, self.config_entry.data.get(CONF_URL, DEFAULT_URL)
+        entry = self.config_entry
+        current_url = entry.options.get(
+            CONF_URL, entry.data.get(CONF_URL, DEFAULT_URL)
         )
-        current_scan = self.config_entry.options.get(
+        current_scan = entry.options.get(
             CONF_SCAN_INTERVAL,
-            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS),
+            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS),
         )
 
         schema_dict: dict[Any, Any] = {
             vol.Optional(CONF_URL, default=current_url): cv.string,
             vol.Optional(
-                CONF_SCAN_INTERVAL, default=current_scan
+                CONF_SCAN_INTERVAL, default=int(current_scan)
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=168)),
         }
-
-        # Permetti l'override puntuale dei valori ARERA
-        for key, val in DEFAULT_ARERA_VALUES.items():
-            curr_val = self.config_entry.options.get(key, val)
-            schema_dict[vol.Optional(f"override_{key}", default=float(curr_val))] = vol.Coerce(float)
 
         return self.async_show_form(
             step_id="init",

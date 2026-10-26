@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "ARERA Tariffs Options",
-        "description": "Modify data source URL or customize individual tariff parameters.",
+        "description": "ARERA tariffs are updated automatically from official online sources. No manual configuration is required; you can optionally adjust the update frequency or data source URL here.",
         "data": {
           "url": "Excel File URL or JSON Endpoint",
           "scan_interval": "Update frequency (hours)"

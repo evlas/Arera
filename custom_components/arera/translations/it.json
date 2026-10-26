@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "Opzioni ARERA Tariffe",
-        "description": "Modifica l'URL della sorgente o imposta valori personalizzati per le singole componenti tariffarie.",
+        "description": "Le tariffe ARERA vengono aggiornate automaticamente dalla fonte ufficiale online. Non è necessaria alcuna configurazione manuale; da qui puoi eventualmente modificare la frequenza di aggiornamento o l'URL della sorgente.",
         "data": {
           "url": "URL File Excel o Endpoint JSON",
           "scan_interval": "Frequenza aggiornamento (ore)"
