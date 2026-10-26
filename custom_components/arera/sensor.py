@@ -61,6 +61,7 @@ class AreraSensor(CoordinatorEntity[AreraDataUpdateCoordinator], SensorEntity):
             name="ARERA Tariffe Regolate",
             manufacturer="ARERA",
             model="Tariffe Bassa Tensione Domestici",
+            sw_version=str(coordinator.version) if coordinator.version else "1.0.1",
         )
 
     @property

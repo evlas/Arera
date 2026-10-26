@@ -33,9 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator per gestire l'acquisizione dei dati ARERA dalla rete."""
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry, version: str | None = None) -> None:
         """Inizializza il coordinator."""
         self.entry = config_entry
+        self.version = str(version) if version is not None else None
         self.source_type = config_entry.data.get(CONF_SOURCE_TYPE, SOURCE_TYPE_ARERA_XLSX)
         self.url = config_entry.options.get(
             CONF_URL, config_entry.data.get(CONF_URL, DEFAULT_URL)
