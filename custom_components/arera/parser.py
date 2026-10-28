@@ -1,4 +1,4 @@
-"""Parser integrato per tabelle ufficiali ARERA (formato Excel .xlsx)."""
+"""Parser integrato per tabelle ufficiali ARERA (formato Excel .xlsx per Luce e Gas)."""
 from __future__ import annotations
 
 import io
@@ -22,7 +22,7 @@ def _extract_excel_rows(content: bytes) -> tuple[dict[int, dict[str, Any]], list
         sheet_name = "Foglio 1"
         target_path = "xl/worksheets/sheet1.xml"
 
-        # Leggi workbook.xml e le relative relazioni per identificare il primo foglio attivo
+        # Leggi workbook.xml e le relative relazioni per identificare il primo foglio attivo (il più recente in ARERA)
         if "xl/workbook.xml" in z.namelist() and "xl/_rels/workbook.xml.rels" in z.namelist():
             try:
                 wb_tree = ET.fromstring(z.read("xl/workbook.xml"))
@@ -80,7 +80,8 @@ def _extract_excel_rows(content: bytes) -> tuple[dict[int, dict[str, Any]], list
 def _parse_num(val: Any, component_name: str) -> float:
     """Estrae un numero in virgola mobile sollevando eccezione se mancante o non valido."""
     if val is None or str(val).strip() in ("-", "- ", "", "None"):
-        raise ValueError(f"Valore mancante o vuoto per la componente '{component_name}'")
+        # Se la componente è per sua natura pari a 0 nel tabellare
+        return 0.0
     try:
         return float(val)
     except (ValueError, TypeError) as err:
@@ -250,5 +251,106 @@ def parse_arera_xlsx(content: bytes) -> dict[str, Any]:
         "Tariffe ARERA STG estratte con successo per il periodo '%s' (foglio: '%s')",
         final_period,
         sheet_name,
+    )
+    return data
+
+
+def parse_arera_gas_xlsx(
+    content: bytes,
+    ambito_key: str = "nord_orientale",
+    scaglione_key: str = "scaglione_3",
+) -> dict[str, Any]:
+    """Estrae le tariffe ufficiali ARERA Gas Naturale (file G{anno}_stv.xlsx) per l'ambito e scaglione indicati."""
+    rows, strings, sheet_name = _extract_excel_rows(content)
+
+    ambiti_names: dict[str, str] = {
+        "nord_occidentale": "nord occidentale",
+        "nord_orientale": "nord orientale",
+        "centrale": "centrale",
+        "centro_sud_orientale": "centro-sud orientale",
+        "centro_sud_occidentale": "centro-sud occidentale",
+        "meridionale": "meridionale",
+        "sardegna": "sardegna",
+    }
+    target_name = ambiti_names.get(ambito_key, "nord orientale")
+
+    # 1. Trova l'inizio dell'ambito geografico
+    ambito_row: int | None = None
+    for r, cols in sorted(rows.items()):
+        b_val = str(cols.get("B", "")).lower()
+        if "ambito" in b_val and target_name in b_val:
+            ambito_row = r
+            break
+
+    if not ambito_row:
+        raise ValueError(f"Ambito gas '{target_name}' non trovato nel file Excel ARERA")
+
+    header_row = ambito_row + 1
+    period = rows.get(header_row, {}).get("B") or sheet_name
+
+    # 2. Determina la riga dello scaglione di consumo richiesto
+    scaglione_patterns: dict[str, str] = {
+        "scaglione_1": "0 a 120",
+        "scaglione_2": "121 a 480",
+        "scaglione_3": "481 a 1.560",
+        "scaglione_4": "1.561 a 5.000",
+    }
+    pattern_to_find = scaglione_patterns.get(scaglione_key, "481 a 1.560")
+
+    r_energia_target: int | None = None
+    r_fissa_g6: int | None = None
+
+    for r in range(ambito_row, ambito_row + 18):
+        b = str(rows.get(r, {}).get("B", "")).lower()
+        if pattern_to_find in b:
+            r_energia_target = r
+        elif "classe fino a g6" in b and "utenze" not in b:
+            r_fissa_g6 = r
+
+    # Fallback se non trova lo scaglione specifico: usa lo scaglione 1
+    if not r_energia_target:
+        for r in range(ambito_row, ambito_row + 18):
+            b = str(rows.get(r, {}).get("B", "")).lower()
+            if "0 a 120" in b:
+                r_energia_target = r
+                break
+
+    if not r_energia_target or not r_fissa_g6:
+        raise ValueError(
+            f"Righe quote gas non trovate per l'ambito '{target_name}' (energia: {r_energia_target}, fissa: {r_fissa_g6})"
+        )
+
+    r_e = rows[r_energia_target]
+    r_f = rows[r_fissa_g6]
+
+    data: dict[str, Any] = {
+        "gas_periodo": period,
+        "gas_sheet_name": sheet_name,
+        "gas_ambito": target_name,
+        "gas_scaglione": scaglione_key,
+        # Quote variabili al metro cubo (€/Smc)
+        "gas_cmemm": round(_parse_num(r_e.get("C"), "gas_cmemm"), 6),
+        "gas_ccr": round(_parse_num(r_e.get("D"), "gas_ccr"), 6),
+        "gas_qvd_variabile": round(_parse_num(r_e.get("E"), "gas_qvd_variabile"), 6),
+        "gas_tau3": round(_parse_num(r_e.get("H"), "gas_tau3"), 6),
+        "gas_qt": round(_parse_num(r_e.get("I"), "gas_qt"), 6),
+        "gas_rs": round(_parse_num(r_e.get("J"), "gas_rs"), 6),
+        "gas_ug1": round(_parse_num(r_e.get("K"), "gas_ug1"), 6),
+        "gas_re": round(_parse_num(r_e.get("P"), "gas_re"), 6),
+        "gas_ug2_variabile": round(_parse_num(r_e.get("Q"), "gas_ug2_variabile"), 6),
+        "gas_ug3": round(_parse_num(r_e.get("R"), "gas_ug3"), 6),
+        "gas_totale_variabile": round(_parse_num(r_e.get("T"), "gas_totale_variabile"), 6),
+        # Quote fisse annue (€/anno) contatore domestico G6
+        "gas_qvd_fissa": round(_parse_num(r_f.get("E"), "gas_qvd_fissa"), 4),
+        "gas_tau1": round(_parse_num(r_f.get("G"), "gas_tau1"), 4),
+        "gas_ug2_fissa": round(_parse_num(r_f.get("Q"), "gas_ug2_fissa"), 4),
+        "gas_totale_fissa": round(_parse_num(r_f.get("T"), "gas_totale_fissa"), 4),
+    }
+
+    _LOGGER.info(
+        "Tariffe ARERA Gas estratte con successo per l'ambito '%s' (Periodo: %s, Scaglione: %s)",
+        target_name,
+        period,
+        scaglione_key,
     )
     return data

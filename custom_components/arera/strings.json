@@ -2,11 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure ARERA Electricity Tariffs",
-        "description": "Select how to acquire regulated ARERA tariffs (fixed, transport, system charges). Default: official ARERA Excel sheet online.",
+        "title": "Configure ARERA Tariffs (Electricity & Gas)",
+        "description": "Select the utility supplies to monitor. ARERA tariffs will be automatically downloaded and parsed from official tables online.",
         "data": {
+          "service_type": "Utility Service (Electricity, Gas or Both)",
+          "gas_ambito": "Gas Geographic Area (Ambito)",
+          "gas_scaglione": "Annual Gas Consumption Bracket",
           "source_type": "Data Source",
-          "url": "Official Excel File URL or JSON Endpoint",
           "scan_interval": "Update frequency (hours)"
         }
       }
@@ -17,16 +19,18 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "ARERA Tariffs is already configured in Home Assistant"
+      "already_configured": "This ARERA configuration already exists in Home Assistant"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "ARERA Tariffs Options",
-        "description": "ARERA tariffs are updated automatically from official online sources. No manual configuration is required; you can optionally adjust the update frequency or data source URL here.",
+        "description": "Modify the monitored utility service, gas geographic area or update frequency.",
         "data": {
-          "url": "Excel File URL or JSON Endpoint",
+          "service_type": "Utility Service",
+          "gas_ambito": "Gas Geographic Area (Ambito)",
+          "gas_scaglione": "Annual Gas Consumption Bracket",
           "scan_interval": "Update frequency (hours)"
         }
       }
@@ -34,48 +38,36 @@
   },
   "entity": {
     "sensor": {
-      "s1": {
-        "name": "Fixed transport fee (s1)"
-      },
-      "s2": {
-        "name": "Power capacity transport fee (s2)"
-      },
-      "s3": {
-        "name": "Energy volume transport fee (s3)"
-      },
-      "uc3": {
-        "name": "Equalization UC3"
-      },
-      "uc6qe": {
-        "name": "UC6 energy rate"
-      },
-      "uc6qp": {
-        "name": "UC6 capacity rate"
-      },
-      "asos": {
-        "name": "Renewable system charge (ASOS)"
-      },
-      "arim": {
-        "name": "Remaining system charges (ARIM)"
-      },
-      "dispbt": {
-        "name": "Dispatch component DispBT"
-      },
-      "cdispd": {
-        "name": "Domestic wholesale dispatching CDISPD"
-      },
-      "csed": {
-        "name": "Efficient balancing CSED"
-      },
-      "cpstgd": {
-        "name": "Gradual protections equalization CPSTGD"
-      },
-      "parametrolamda": {
-        "name": "Lambda parameter"
-      },
-      "today": {
-        "name": "Last update"
-      }
+      "s1": { "name": "Fixed transport fee (s1)" },
+      "s2": { "name": "Power capacity transport fee (s2)" },
+      "s3": { "name": "Energy volume transport fee (s3)" },
+      "uc3": { "name": "Equalization UC3" },
+      "uc6qe": { "name": "UC6 energy rate" },
+      "uc6qp": { "name": "UC6 capacity rate" },
+      "asos": { "name": "Renewable system charge (ASOS)" },
+      "arim": { "name": "Remaining system charges (ARIM)" },
+      "dispbt": { "name": "Dispatch component DispBT" },
+      "cdispd": { "name": "Domestic wholesale dispatching CDISPD" },
+      "csed": { "name": "Efficient balancing CSED" },
+      "cpstgd": { "name": "Gradual protections equalization CPSTGD" },
+      "parametrolamda": { "name": "Lambda parameter" },
+      "today": { "name": "Electricity tariff reference period" },
+      "gas_cmemm": { "name": "Gas raw commodity price (CMEMm)" },
+      "gas_ccr": { "name": "Gas wholesale procurement fee (CCR)" },
+      "gas_qvd_variabile": { "name": "Gas retail sale variable fee (QVDv)" },
+      "gas_tau3": { "name": "Gas distribution and metering variable (tau3)" },
+      "gas_qt": { "name": "Gas transport component (QT)" },
+      "gas_rs": { "name": "Gas service quality component (RS)" },
+      "gas_ug1": { "name": "Gas equalization component (UG1)" },
+      "gas_re": { "name": "Gas energy efficiency charge (RE)" },
+      "gas_ug2_variabile": { "name": "Gas retail compensation variable (UG2v)" },
+      "gas_ug3": { "name": "Gas unpaid bills recovery (UG3)" },
+      "gas_totale_variabile": { "name": "Gas total variable rate" },
+      "gas_qvd_fissa": { "name": "Gas retail sale fixed fee (QVDf)" },
+      "gas_tau1": { "name": "Gas distribution and metering fixed fee (tau1)" },
+      "gas_ug2_fissa": { "name": "Gas retail compensation fixed fee (UG2f)" },
+      "gas_totale_fissa": { "name": "Gas total fixed fee" },
+      "gas_periodo": { "name": "Gas tariff reference period" }
     }
   }
 }

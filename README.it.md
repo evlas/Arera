@@ -1,4 +1,4 @@
-# ARERA Tariffe Energia Elettrica - Integrazione Home Assistant
+# ARERA Tariffe Regolate (Luce e Gas) - Integrazione Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/default)
 [![GitHub Release](https://img.shields.io/github/v/release/evlas/Arera?color=blue&style=flat-square)](https://github.com/evlas/Arera/releases)
@@ -9,30 +9,30 @@
 
 🌐 *[English version](README.md) | Versione in italiano*
 
-Integrazione professionale per **Home Assistant** per acquisire e monitorare automaticamente le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) specificamente per il settore dell'**Energia Elettrica** (servizi di trasmissione, distribuzione, misura contatore, oneri generali di sistema ASOS e ARIM, e corrispettivi di dispacciamento ed equalizzazione per clienti domestici in bassa tensione).
+Integrazione per **Home Assistant** per acquisire e monitorare automaticamente le tariffe regolate stabilite da **ARERA** (Autorità di Regolazione per Energia Reti e Ambiente) per:
+1. ⚡ **Energia Elettrica (Luce)**: servizi di rete (trasporto e misura $\sigma_1, \sigma_2, \sigma_3$), oneri generali di sistema (ASOS e ARIM), perequazioni ($\text{UC}_3, \text{UC}_6$) e corrispettivi di dispacciamento (DispBT, CDISPD, CSED, CPSTGD, parametro $\lambda$).
+2. 🔥 **Gas Naturale**: condizioni economiche del servizio di tutela della vulnerabilità (CMEMm, CCR, commercializzazione QVD fissa/variabile, distribuzione e misura $\tau_1, \tau_3$, trasporto QT, qualità RS, perequazione UG1, risparmio energetico RE, oneri UG2 fisso/variabile, morosità UG3).
 
-> [!IMPORTANT]
-> **Ambito di Applicazione: Solo Energia Elettrica**
-> Questa integrazione è dedicata esclusivamente al settore dell'**Energia Elettrica (Luce)** per utenze domestiche in bassa tensione (BT). Fornisce in tempo reale tutte le componenti regolate necessarie al calcolo della bolletta elettrica. Non include tariffe per il gas naturale o altri servizi regolati da ARERA.
+L'utente può scegliere di configurare **solo la Luce**, **solo il Gas** oppure **entrambe le forniture**, anche aggiungendo più istanze separate per organizzare i dispositivi.
 
 ---
 
 ## 🚀 Caratteristiche Principali
 
 - **Download Automatico Live dai Server Ufficiali ARERA (Predefinito)**:
-  - Scarica e analizza periodicamente i file Excel ufficiali pubblicati su `arera.it`:
-    1. **`E{anno}_stg_domesticiNonVulnerabili.xlsx`**: per le tariffe di rete, trasmissione, distribuzione, misura, perequazione ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$) e oneri generali di sistema (ASOS, ARIM).
-    2. **`E{anno}-smt.xlsx`**: per i corrispettivi del servizio di tutela e dispacciamento, estraendo dinamicamente in tempo reale la componente **DispBT** (Delibera ARERA 218/2026/R/eel).
-- **Valori Ufficiali Integrati (Fallback Robusto)**:
-  - Include i valori ufficiali ARERA predefiniti. Se i server ARERA o la connessione di rete sono temporaneamente non disponibili, l'integrazione non va mai in errore e garantisce continuità assoluta ai calcoli della bolletta.
-- **Configurazione 100% da WebUI (Config Flow & Options Flow)**:
-  - Configurazione guidata tramite interfaccia grafica: scegli la modalità (Tabelle Ufficiali ARERA, URL Personalizzato, oppure Valori Manuali) e imposta l'intervallo di aggiornamento (default: 24 ore).
-- **Personalizzazione e Override nelle Opzioni**:
-  - Puoi modificare in qualunque momento qualunque singola componente regolata tramite il menu **Opzioni** dell'integrazione senza riavviare Home Assistant.
-- **Organizzazione Pulita del Dispositivo**:
-  - Tutte le 14 componenti tariffarie e diagnostiche sono organizzate sotto un unico dispositivo nativo: **ARERA Tariffe Regolate**.
-- **Progettata per l'Integrazione Compagna Bolletta**:
-  - Fornisce automaticamente a [Bolletta Elettrica](https://github.com/evlas/Bolletta) tutte le quote fisse e variabili aggiornate (incluso `sensor.arera_dispbt`) per il calcolo trasparente e preciso del costo finito dell'energia.
+  - **Luce**: scarica `E{anno}_stg_domesticiNonVulnerabili.xlsx` e `E{anno}-smt.xlsx` (estraendo DispBT dalla Delibera 218/2026/R/eel).
+  - **Gas**: scarica `G{anno}_stv.xlsx` per il Servizio di Tutela della Vulnerabilità Gas.
+  - **Fallback Annuale e Storico**: seleziona automaticamente l'anno corrente con fallback sull'anno precedente per garantire continuità nei primi giorni di gennaio.
+- **Parsing Dinamico Resiliente per Intestazione**:
+  - Scansione dinamica delle colonne per intestazione ($\sigma_1, \sigma_3, \text{ASOS}, \dots$), evitando disallineamenti in caso di modifiche all'impaginazione del foglio ARERA.
+  - Se un valore non è reperibile o non numerico, l'integrazione solleva un errore trasparente rendendo i sensori `unavailable` anziché mostrare valori fittizi.
+- **Ambiti Geografici e Scaglioni Gas Personalizzabili**:
+  - Supporto completo ai 7 ambiti geografici italiani (Nord Occidentale, Nord Orientale, Centrale, Centro-Sud Orientale, Centro-Sud Occidentale, Meridionale, Sardegna).
+  - Scelta dello scaglione di consumo annuo (da 0-120 Smc fino a oltre 5.000 Smc/anno) per calcolare la quota variabile esatta di distribuzione e oneri.
+- **Dispositivi Nativi Separati**:
+  - Organizza i sensori sotto due dispositivi dedicati e puliti: **ARERA Tariffe Luce** e **ARERA Tariffe Gas**.
+- **Diagnostica e Trasparenza del Periodo**:
+  - Ciascun sensore espone negli attributi il mese/periodo di riferimento (es. *«Settembre 2026»*), il nome del foglio Excel, l'URL sorgente e il timestamp di aggiornamento.
 
 ---
 
@@ -43,113 +43,121 @@ Integrazione professionale per **Home Assistant** per acquisire e monitorare aut
 1. Apri **HACS** in Home Assistant.
 2. Vai su **Integrazioni** -> Menu tre puntini in alto a destra -> **Repository personalizzati**.
 3. Incolla `https://github.com/evlas/Arera.git`, seleziona la categoria **Integrazione** e clicca **Aggiungi**.
-4. Cerca **ARERA Tariffe Luce** e clicca su **Scarica**.
+4. Cerca **ARERA Tariffe Regolate** e clicca su **Scarica**.
 5. Riavvia Home Assistant.
 
 ### Metodo 2: Installazione Manuale
 
-1. Scarica la cartella `custom_components/arera`.
-2. Copiala nella directory `custom_components/` della tua installazione di Home Assistant:
-   ```
-   /config/custom_components/arera/
-   ```
-3. Riavvia Home Assistant.
+1. Copia la cartella `custom_components/arera` nella directory `/config/custom_components/arera/` della tua installazione di Home Assistant.
+2. Riavvia Home Assistant.
 
 ---
 
 ## ⚙️ Configurazione
 
-1. Nella WebUI di Home Assistant, vai su **Impostazioni** -> **Dispositivi e Servizi**.
-2. Clicca su **Aggiungi Integrazione** in basso a destra.
-3. Cerca **ARERA Tariffe Luce**.
-4. Seleziona la sorgente dei dati:
-   - **Tabelle Ufficiali ARERA (XLSX online)** *(Consigliato / Predefinito)*: Scarica automaticamente via rete sia `E{anno}_stg_domesticiNonVulnerabili.xlsx` che `E{anno}-smt.xlsx` direttamente dal portale ufficiale ARERA.
-   - **URL Personalizzato (JSON o XLSX)**: Inserisci l'URL di un tuo server web locale o endpoint cloud (es. `http://192.168.1.100/arera.json` o file Excel).
-   - **Manuale / Valori Ufficiali Predefiniti**: Utilizza i valori predefiniti integrati e modificali a piacimento tramite il menu Opzioni.
-5. Imposta la frequenza di aggiornamento desiderata (default: `24` ore).
+1. In Home Assistant, vai su **Impostazioni** -> **Dispositivi e Servizi** -> **Aggiungi Integrazione**.
+2. Cerca **ARERA Tariffe Luce e Gas**.
+3. Seleziona la fornitura desiderata:
+   - **Entrambe (Luce & Gas)** *(Consigliato)*
+   - **Solo Energia Elettrica (Luce)**
+   - **Solo Gas Naturale**
+4. Se hai selezionato il Gas, indica il tuo **Ambito Geografico** (es. *Nord Orientale*) e lo **Scaglione di Consumo** (predefinito: *Scaglione 3: da 481 a 1.560 Smc/anno* per riscaldamento autonomo).
+5. Seleziona la sorgente (Tabelle Ufficiali ARERA online, URL Personalizzato, oppure Manuale).
+6. Frequenza di aggiornamento (default: `24` ore).
 
 ---
 
 ## 📑 Entità Create
 
-| Entità | Descrizione | Unità | Fonte / Componente ARERA |
+### ⚡ Dispositivo: ARERA Tariffe Luce
+
+| Entità | Descrizione | Unità | Componente ARERA |
 | :--- | :--- | :--- | :--- |
-| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_dispbt` | Corrispettivo di Dispacciamento BT | EUR/anno | $\text{DispBT}$ (estratto live da `E{anno}-smt.xlsx`) |
-| `sensor.arera_cdispd` | Corrispettivo Dispacciamento Domestici | EUR/kWh | $\text{CDISPD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_csed` | Corrispettivo Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_parametro_lamda` | Parametro Lambda Servizio Tutele Graduali | EUR/anno | $\lambda$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_ultimo_aggiornamento` | Data e ora dell'ultimo aggiornamento eseguito | - | Timestamp locale |
+| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ |
+| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ |
+| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ |
+| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ |
+| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ |
+| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ |
+| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ |
+| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ |
+| `sensor.arera_dispbt` | Corrispettivo di Dispacciamento BT | EUR/anno | $\text{DispBT}$ |
+| `sensor.arera_cdispd` | Dispacciamento Domestici all'Ingrosso | EUR/kWh | $\text{CDISPD}$ |
+| `sensor.arera_csed` | Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ |
+| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ |
+| `sensor.arera_parametro_lamda` | Parametro Lambda Tutele Graduali | EUR/anno | $\lambda$ |
+| `sensor.arera_ultimo_aggiornamento` | Periodo di riferimento tariffe luce | - | es. «Settembre 2026» |
+
+### 🔥 Dispositivo: ARERA Tariffe Gas
+
+| Entità | Descrizione | Unità | Componente ARERA |
+| :--- | :--- | :--- | :--- |
+| `sensor.arera_gas_cmemm` | Prezzo Materia Prima Gas all'Ingrosso | EUR/Smc | $\text{CMEM}_m$ |
+| `sensor.arera_gas_ccr` | Corrispettivo Approvvigionamento | EUR/Smc | $\text{CCR}$ |
+| `sensor.arera_gas_qvd_variabile` | Vendita al Dettaglio Quota Variabile | EUR/Smc | $\text{QVD}_v$ |
+| `sensor.arera_gas_tau3` | Distribuzione e Misura Quota Variabile | EUR/Smc | $\tau_3$ |
+| `sensor.arera_gas_qt` | Quota Trasporto Gas | EUR/Smc | $\text{QT}$ |
+| `sensor.arera_gas_rs` | Recupero Qualità del Servizio Gas | EUR/Smc | $\text{RS}$ |
+| `sensor.arera_gas_ug1` | Perequazione Costi Distribuzione | EUR/Smc | $\text{UG}_1$ |
+| `sensor.arera_gas_re` | Risparmio Energetico Gas | EUR/Smc | $\text{RE}$ |
+| `sensor.arera_gas_ug2_variabile` | Oneri Commercializzazione Variabile | EUR/Smc | $\text{UG}_{2v}$ |
+| `sensor.arera_gas_ug3` | Recupero Morosità Clienti Vulnerabili | EUR/Smc | $\text{UG}_3$ |
+| `sensor.arera_gas_totale_variabile` | **Totale Spesa Variabile Gas** | EUR/Smc | Somma quote variabili |
+| `sensor.arera_gas_qvd_fissa` | Vendita al Dettaglio Quota Fissa | EUR/anno | $\text{QVD}_f$ |
+| `sensor.arera_gas_tau1` | Distribuzione e Misura Quota Fissa (G6) | EUR/anno | $\tau_1$ |
+| `sensor.arera_gas_ug2_fissa` | Oneri Commercializzazione Quota Fissa | EUR/anno | $\text{UG}_{2f}$ |
+| `sensor.arera_gas_totale_fissa` | **Totale Spesa Fissa Annua Gas** | EUR/anno | Somma quote fisse |
+| `sensor.arera_gas_periodo` | Periodo di riferimento tariffe gas | - | es. «Settembre 2026» |
 
 ---
 
 ## 🎛️ Esempio Scheda Lovelace
 
 ```yaml
-type: entities
-title: ARERA Tariffe Regolate
-show_header_toggle: false
-entities:
-  - entity: sensor.arera_quota_fissa
-    name: Quota Fissa Trasporto (s1)
-  - entity: sensor.arera_quota_potenza
-    name: Quota Potenza Trasporto (s2)
-  - entity: sensor.arera_quota_energia
-    name: Quota Energia Trasporto (s3)
-  - entity: sensor.arera_asos
-    name: Oneri Rinnovabili (ASOS)
-  - entity: sensor.arera_arim
-    name: Altri Oneri di Sistema (ARIM)
-  - entity: sensor.arera_uc3
-    name: Perequazione UC3
-  - entity: sensor.arera_dispbt
-    name: Componente DispBT (E*-smt)
-  - entity: sensor.arera_ultimo_aggiornamento
-    name: Ultimo Aggiornamento
+type: vertical-stack
+cards:
+  - type: entities
+    title: ⚡ ARERA Tariffe Luce
+    show_header_toggle: false
+    entities:
+      - entity: sensor.arera_ultimo_aggiornamento
+        name: Periodo di Riferimento
+      - entity: sensor.arera_quota_fissa
+        name: Quota Fissa Rete (s1)
+      - entity: sensor.arera_quota_potenza
+        name: Quota Potenza Rete (s2)
+      - entity: sensor.arera_quota_energia
+        name: Quota Energia Rete (s3)
+      - entity: sensor.arera_asos
+        name: Oneri Rinnovabili (ASOS)
+      - entity: sensor.arera_arim
+        name: Altri Oneri (ARIM)
+      - entity: sensor.arera_dispbt
+        name: DispBT (Dispacciamento)
+
+  - type: entities
+    title: 🔥 ARERA Tariffe Gas Naturale
+    show_header_toggle: false
+    entities:
+      - entity: sensor.arera_gas_periodo
+        name: Periodo di Riferimento
+      - entity: sensor.arera_gas_totale_fissa
+        name: Spesa Fissa Annua (G6)
+      - entity: sensor.arera_gas_totale_variabile
+        name: Spesa Variabile al Metro Cubo
+      - type: divider
+      - entity: sensor.arera_gas_cmemm
+        name: Materia Prima (CMEMm)
+      - entity: sensor.arera_gas_tau1
+        name: Quota Fissa Distribuzione (tau1)
+      - entity: sensor.arera_gas_tau3
+        name: Quota Variabile Distribuzione (tau3)
+      - entity: sensor.arera_gas_qt
+        name: Trasporto (QT)
 ```
-
----
-
-## 📄 Schema JSON Personalizzato (Opzionale)
-
-Se scegli la modalità ad endpoint JSON locale o remoto, fai riferimento allo schema d'esempio [`arera_sample.json`](arera_sample.json):
-
-```json
-{
-  "today": "2026-10-01",
-  "cdispd": 0.019902,
-  "csed": 0.00056,
-  "cpstgd": 0.00214,
-  "parametrolamda": -73.1637,
-  "dispbt": 1.107,
-  "s1": 23.04,
-  "s2": 23.52,
-  "s3": 0.0119,
-  "uc3": 0.00276,
-  "uc6qe": 0.00007,
-  "uc6qp": 0.1988,
-  "asos": 0.028657,
-  "arim": 0.001638
-}
-```
-
----
-
-## 🛠️ Integrazione Compagna
-
-Per calcolare il costo dinamico finito della bolletta elettrica con il tuo fornitore:
-- 🔗 **[Bolletta Elettrica](https://github.com/evlas/Bolletta)**
 
 ---
 
 ## 📄 Licenza
 
-Distribuito sotto licenza GNU General Public License v3.0 (GPLv3). Consulta il file [LICENSE](LICENSE) per ulteriori dettagli.
+Rilasciato sotto licenza [GNU General Public License v3.0](LICENSE).
