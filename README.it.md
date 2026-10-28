@@ -21,7 +21,7 @@ Integrazione professionale per **Home Assistant** per acquisire e monitorare aut
 
 - **Download Automatico Live dai Server Ufficiali ARERA (Predefinito)**:
   - Scarica e analizza periodicamente i file Excel ufficiali pubblicati su `arera.it`:
-    1. **`stg_domesticiNonVulnerabili.xlsx`**: per le tariffe di rete, trasmissione, distribuzione, misura, perequazione ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$) e oneri generali di sistema (ASOS, ARIM).
+    1. **`E{anno}_stg_domesticiNonVulnerabili.xlsx`**: per le tariffe di rete, trasmissione, distribuzione, misura, perequazione ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$) e oneri generali di sistema (ASOS, ARIM).
     2. **`E{anno}-smt.xlsx`**: per i corrispettivi del servizio di tutela e dispacciamento, estraendo dinamicamente in tempo reale la componente **DispBT** (Delibera ARERA 218/2026/R/eel).
 - **Valori Ufficiali Integrati (Fallback Robusto)**:
   - Include i valori ufficiali ARERA predefiniti. Se i server ARERA o la connessione di rete sono temporaneamente non disponibili, l'integrazione non va mai in errore e garantisce continuità assoluta ai calcoli della bolletta.
@@ -63,7 +63,7 @@ Integrazione professionale per **Home Assistant** per acquisire e monitorare aut
 2. Clicca su **Aggiungi Integrazione** in basso a destra.
 3. Cerca **ARERA Tariffe Luce**.
 4. Seleziona la sorgente dei dati:
-   - **Tabelle Ufficiali ARERA (XLSX online)** *(Consigliato / Predefinito)*: Scarica automaticamente via rete sia `stg_domesticiNonVulnerabili.xlsx` che `E{anno}-smt.xlsx` direttamente dal portale ufficiale ARERA.
+   - **Tabelle Ufficiali ARERA (XLSX online)** *(Consigliato / Predefinito)*: Scarica automaticamente via rete sia `E{anno}_stg_domesticiNonVulnerabili.xlsx` che `E{anno}-smt.xlsx` direttamente dal portale ufficiale ARERA.
    - **URL Personalizzato (JSON o XLSX)**: Inserisci l'URL di un tuo server web locale o endpoint cloud (es. `http://192.168.1.100/arera.json` o file Excel).
    - **Manuale / Valori Ufficiali Predefiniti**: Utilizza i valori predefiniti integrati e modificali a piacimento tramite il menu Opzioni.
 5. Imposta la frequenza di aggiornamento desiderata (default: `24` ore).
@@ -74,19 +74,19 @@ Integrazione professionale per **Home Assistant** per acquisire e monitorare aut
 
 | Entità | Descrizione | Unità | Fonte / Componente ARERA |
 | :--- | :--- | :--- | :--- |
-| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_fissa` | Quota Fissa Trasporto e Misura | EUR/anno | $\sigma_1$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_potenza` | Quota Potenza Trasporto e Misura | EUR/kW/anno | $\sigma_2$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_energia` | Quota Energia Trasporto e Misura | EUR/kWh | $\sigma_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc3` | Perequazione Costi di Trasporto | EUR/kWh | $\text{UC}_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qe` | Recuperi Qualità Servizio - Quota Energia | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qp` | Recuperi Qualità Servizio - Quota Potenza | EUR/kW/anno | $\text{UC}_{6\text{qp}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_asos` | Oneri Sostegno Fonti Rinnovabili | EUR/kWh | $\text{ASOS}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_arim` | Rimanenti Oneri Generali di Sistema | EUR/kWh | $\text{ARIM}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
 | `sensor.arera_dispbt` | Corrispettivo di Dispacciamento BT | EUR/anno | $\text{DispBT}$ (estratto live da `E{anno}-smt.xlsx`) |
-| `sensor.arera_cdispd` | Corrispettivo Dispacciamento Domestici | EUR/kWh | $\text{CDISPD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_csed` | Corrispettivo Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_parametro_lamda` | Parametro Lambda Servizio Tutele Graduali | EUR/anno | $\lambda$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cdispd` | Corrispettivo Dispacciamento Domestici | EUR/kWh | $\text{CDISPD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_csed` | Corrispettivo Sbilanciamento Efficiente | EUR/kWh | $\text{CSED}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cpstgd` | Perequazione Servizio Tutele Graduali | EUR/kWh | $\text{CPSTGD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_parametro_lamda` | Parametro Lambda Servizio Tutele Graduali | EUR/anno | $\lambda$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
 | `sensor.arera_ultimo_aggiornamento` | Data e ora dell'ultimo aggiornamento eseguito | - | Timestamp locale |
 
 ---

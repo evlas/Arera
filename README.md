@@ -21,7 +21,7 @@ Professional **Home Assistant** integration to automatically acquire and monitor
 
 - **Direct Live Download from Official ARERA Servers (Default)**:
   - Periodically downloads and parses official Excel tables published on `arera.it`:
-    1. **`stg_domesticiNonVulnerabili.xlsx`**: for grid tariffs, transmission, distribution, metering, equalization ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$), and general system charges (ASOS, ARIM).
+    1. **`E{anno}_stg_domesticiNonVulnerabili.xlsx`**: for grid tariffs, transmission, distribution, metering, equalization ($\sigma_1, \sigma_2, \sigma_3, \text{UC}_3, \text{UC}_6$), and general system charges (ASOS, ARIM).
     2. **`E{year}-smt.xlsx`**: for regulated standard offer fees, extracting the **DispBT** component live in real-time (ARERA Resolution 218/2026/R/eel).
 - **Official Built-in Fallbacks**:
   - Preloaded with verified official ARERA values. If ARERA servers or network connections are temporarily unreachable, the integration never fails and maintains continuous bill calculation.
@@ -63,7 +63,7 @@ Professional **Home Assistant** integration to automatically acquire and monitor
 2. Click **Add Integration** in the bottom right corner.
 3. Search for **ARERA Tariffe Luce**.
 4. Choose your acquisition mode:
-   - **Official ARERA Tables (XLSX online)** *(Recommended / Default)*: Downloads both `stg_domesticiNonVulnerabili.xlsx` and `E{year}-smt.xlsx` directly from the official ARERA portal.
+   - **Official ARERA Tables (XLSX online)** *(Recommended / Default)*: Downloads both `E{anno}_stg_domesticiNonVulnerabili.xlsx` and `E{year}-smt.xlsx` directly from the official ARERA portal.
    - **Custom URL (JSON or XLSX)**: Specify a custom URL from a local web server or cloud endpoint (e.g. `http://192.168.1.100/arera.json` or Excel file).
    - **Manual / Official Defaults**: Use built-in default values and customize them whenever you want via Options.
 5. Set the polling interval (default: `24` hours).
@@ -74,19 +74,19 @@ Professional **Home Assistant** integration to automatically acquire and monitor
 
 | Entity | Description | Unit | ARERA Component / Source |
 | :--- | :--- | :--- | :--- |
-| `sensor.arera_quota_fissa` | Fixed transport and metering fee | EUR/year | $\sigma_1$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_potenza` | Power capacity transport fee | EUR/kW/year | $\sigma_2$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_quota_energia` | Energy volume transport fee | EUR/kWh | $\sigma_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc3` | Transport equalization component | EUR/kWh | $\text{UC}_3$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qe` | Service quality recovery - Energy rate | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_uc6_qp` | Service quality recovery - Capacity rate | EUR/kW/year | $\text{UC}_{6\text{qp}}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_asos` | Renewable energy support system charge | EUR/kWh | $\text{ASOS}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_arim` | Remaining general system charges | EUR/kWh | $\text{ARIM}$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_fissa` | Fixed transport and metering fee | EUR/year | $\sigma_1$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_potenza` | Power capacity transport fee | EUR/kW/year | $\sigma_2$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_quota_energia` | Energy volume transport fee | EUR/kWh | $\sigma_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc3` | Transport equalization component | EUR/kWh | $\text{UC}_3$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qe` | Service quality recovery - Energy rate | EUR/kWh | $\text{UC}_{6\text{qe}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_uc6_qp` | Service quality recovery - Capacity rate | EUR/kW/year | $\text{UC}_{6\text{qp}}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_asos` | Renewable energy support system charge | EUR/kWh | $\text{ASOS}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_arim` | Remaining general system charges | EUR/kWh | $\text{ARIM}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
 | `sensor.arera_dispbt` | Low-voltage dispatch compensation | EUR/year | $\text{DispBT}$ (extracted live from `E{year}-smt.xlsx`) |
-| `sensor.arera_cdispd` | Domestic wholesale dispatching component | EUR/kWh | $\text{CDISPD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_csed` | Efficient balancing component | EUR/kWh | $\text{CSED}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_cpstgd` | Gradual protections equalization | EUR/kWh | $\text{CPSTGD}$ (`stg_domesticiNonVulnerabili.xlsx`) |
-| `sensor.arera_parametro_lamda` | Lambda parameter | EUR/year | $\lambda$ (`stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cdispd` | Domestic wholesale dispatching component | EUR/kWh | $\text{CDISPD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_csed` | Efficient balancing component | EUR/kWh | $\text{CSED}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_cpstgd` | Gradual protections equalization | EUR/kWh | $\text{CPSTGD}$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
+| `sensor.arera_parametro_lamda` | Lambda parameter | EUR/year | $\lambda$ (`E{anno}_stg_domesticiNonVulnerabili.xlsx`) |
 | `sensor.arera_ultimo_aggiornamento` | Timestamp of last tariff update | - | Local timestamp |
 
 ---

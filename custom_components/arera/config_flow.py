@@ -13,7 +13,6 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_SOURCE_TYPE,
     CONF_URL,
-    DEFAULT_ARERA_VALUES,
     DEFAULT_SCAN_INTERVAL_HOURS,
     DEFAULT_URL,
     DOMAIN,
@@ -21,6 +20,7 @@ from .const import (
     SOURCE_TYPE_ARERA_XLSX,
     SOURCE_TYPE_CUSTOM_URL,
     SOURCE_TYPE_MANUAL,
+    get_arera_stg_urls,
 )
 
 
@@ -39,9 +39,9 @@ class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id("arera_tariffe_luce")
             self._abort_if_unique_id_configured()
 
-            # Se ha scelto l'Excel ufficiale, imposta l'URL ufficiale ARERA
+            # Se ha scelto l'Excel ufficiale, imposta l'URL ufficiale ARERA corrente
             if user_input.get(CONF_SOURCE_TYPE) == SOURCE_TYPE_ARERA_XLSX:
-                user_input[CONF_URL] = OFFICIAL_ARERA_XLSX_URL
+                user_input[CONF_URL] = get_arera_stg_urls()[0]
 
             return self.async_create_entry(
                 title="ARERA Tariffe Luce",
