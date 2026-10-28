@@ -2,10 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure ARERA Tariffs (Electricity & Gas)",
-        "description": "Select the utility supplies to monitor. ARERA tariffs will be automatically downloaded and parsed from official tables online.",
+        "title": "Configure ARERA Tariffs",
+        "description": "Select the utility supply to monitor. You can configure an instance for Electricity, one for Natural Gas, or both by adding the integration twice.",
         "data": {
-          "service_type": "Utility Service (Electricity, Gas or Both)",
+          "service_type": "Utility Service"
+        }
+      },
+      "electricity": {
+        "title": "Configure Electricity Tariffs",
+        "description": "ARERA electricity tariffs and parameters will be automatically downloaded and parsed from official tables online.",
+        "data": {
+          "source_type": "Data Source",
+          "scan_interval": "Update frequency (hours)"
+        }
+      },
+      "gas": {
+        "title": "Configure Natural Gas Tariffs",
+        "description": "Select your geographic distribution area and annual consumption bracket. Tariff components will be calculated automatically.",
+        "data": {
           "gas_ambito": "Gas Geographic Area (Ambito)",
           "gas_scaglione": "Annual Gas Consumption Bracket",
           "source_type": "Data Source",
@@ -19,16 +33,15 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "This ARERA configuration already exists in Home Assistant"
+      "already_configured": "This ARERA utility supply is already configured in Home Assistant"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "ARERA Tariffs Options",
-        "description": "Modify the monitored utility service, gas geographic area or update frequency.",
+        "description": "Modify the configuration parameters for this supply.",
         "data": {
-          "service_type": "Utility Service",
           "gas_ambito": "Gas Geographic Area (Ambito)",
           "gas_scaglione": "Annual Gas Consumption Bracket",
           "scan_interval": "Update frequency (hours)"

@@ -2,10 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configura ARERA Tariffe (Luce e Gas)",
-        "description": "Seleziona le forniture da monitorare. Le tariffe ARERA vengono scaricate e aggiornate automaticamente dalle tabelle ufficiali online.",
+        "title": "Configura ARERA Tariffe",
+        "description": "Seleziona la fornitura da monitorare. Puoi creare una configurazione per l'Energia Elettrica, una per il Gas Naturale o entrambe aggiungendo l'integrazione due volte.",
         "data": {
-          "service_type": "Servizio di Fornitura (Luce, Gas o Entrambe)",
+          "service_type": "Servizio di Fornitura"
+        }
+      },
+      "electricity": {
+        "title": "Configura Tariffe Energia Elettrica",
+        "description": "I parametri e le tariffe della luce ARERA verranno scaricati e aggiornati automaticamente dalle tabelle ufficiali online.",
+        "data": {
+          "source_type": "Sorgente Dati",
+          "scan_interval": "Frequenza di aggiornamento (ore)"
+        }
+      },
+      "gas": {
+        "title": "Configura Tariffe Gas Naturale",
+        "description": "Seleziona il tuo ambito geografico e lo scaglione annuo di consumo. Le componenti tariffarie verranno calcolate automaticamente.",
+        "data": {
           "gas_ambito": "Ambito Geografico Gas",
           "gas_scaglione": "Scaglione di Consumo Annuo Gas",
           "source_type": "Sorgente Dati",
@@ -19,19 +33,18 @@
       "unknown": "Errore imprevisto"
     },
     "abort": {
-      "already_configured": "Questa configurazione ARERA è già presente in Home Assistant"
+      "already_configured": "Questa fornitura ARERA è già configurata in Home Assistant"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Opzioni ARERA Tariffe",
-        "description": "Modifica il tipo di fornitura monitorata, l'ambito geografico gas o la frequenza di aggiornamento.",
+        "description": "Modifica i parametri di configurazione della fornitura.",
         "data": {
-          "service_type": "Servizio di Fornitura",
           "gas_ambito": "Ambito Geografico Gas",
           "gas_scaglione": "Scaglione di Consumo Annuo Gas",
-          "scan_interval": "Frequenza aggiornamento (ore)"
+          "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       }
     }

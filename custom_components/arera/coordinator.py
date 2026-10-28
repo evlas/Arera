@@ -1,16 +1,21 @@
 """DataUpdateCoordinator per ARERA Tariffe (Luce e Gas)."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+try:
+    from asyncio import timeout as async_timeout
+except ImportError:
+    from async_timeout import timeout as async_timeout
 
 from .const import (
     CONF_GAS_AMBITO,
@@ -41,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator per gestire l'acquisizione dei dati ARERA Luce e Gas dalla rete."""
+    """Coordinator per gestire l'acquisizione dei dati ARERA Luce o Gas dalla rete."""
 
     def __init__(self, hass: HomeAssistant, config_entry, version: str | None = None) -> None:
         """Inizializza il coordinator."""
@@ -68,12 +73,12 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{self.service_type}",
             update_interval=timedelta(hours=scan_interval_hours),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Recupera i dati da ARERA via web per Luce, Gas o entrambi."""
+        """Recupera i dati da ARERA via web per Luce o Gas."""
         data: dict[str, Any] = {
             "service_type": self.service_type,
             "gas_ambito": self.gas_ambito,
@@ -93,13 +98,14 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         session = async_get_clientsession(self.hass)
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream,*/*",
         }
 
         # 2. Acquisizione Tariffe Energia Elettrica (Luce)
         if self.service_type in (SERVICE_TYPE_ELECTRICITY, SERVICE_TYPE_BOTH):
             stg_success = False
-            last_stg_error: Exception | None = None
+            last_stg_error: str | None = None
 
             if self.source_type == SOURCE_TYPE_ARERA_XLSX:
                 urls_to_try = get_arera_stg_urls()
@@ -112,125 +118,130 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for target_url in urls_to_try:
                 try:
                     _LOGGER.debug("Tentativo download tariffe Luce ARERA da %s", target_url)
-                    async with async_timeout.timeout(30):
+                    async with async_timeout(30):
                         async with session.get(target_url, headers=headers) as response:
-                            if response.status == 200:
-                                content = await response.read()
-                                if content.startswith(b"PK  ") or ".xlsx" in target_url.lower():
-                                    parsed = parse_arera_xlsx(content)
-                                    data.update(parsed)
+                            if response.status != 200:
+                                raise ValueError(f"HTTP status {response.status} da {target_url}")
+                            content = await response.read()
+                            if content.startswith(b"PK") or ".xlsx" in target_url.lower():
+                                parsed = parse_arera_xlsx(content)
+                                data.update(parsed)
+                                data["source_url"] = target_url
+                                stg_success = True
+                                _LOGGER.info(
+                                    "Tariffe Luce ARERA scaricate con successo da %s (%s)",
+                                    target_url,
+                                    parsed.get("period", ""),
+                                )
+                                break
+                            else:
+                                # Prova formato JSON
+                                import json
+
+                                json_data = json.loads(content.decode("utf-8", errors="ignore"))
+                                if isinstance(json_data, dict):
+                                    for k, v in json_data.items():
+                                        k_lower = k.lower().replace("_", "")
+                                        for default_k in DEFAULT_ARERA_VALUES:
+                                            if default_k.lower() == k_lower:
+                                                try:
+                                                    data[default_k] = float(v)
+                                                except (ValueError, TypeError):
+                                                    pass
+                                        if k_lower in ("today", "data", "date", "aggiornamento", "period"):
+                                            data["today"] = str(v)
+                                            data["period"] = str(v)
                                     data["source_url"] = target_url
                                     stg_success = True
-                                    _LOGGER.info(
-                                        "Tariffe Luce ARERA scaricate con successo da %s (%s)",
-                                        target_url,
-                                        parsed.get("period", ""),
-                                    )
                                     break
-                                else:
-                                    # Prova formato JSON
-                                    try:
-                                        import json
-
-                                        json_data = json.loads(content.decode("utf-8", errors="ignore"))
-                                        if isinstance(json_data, dict):
-                                            for k, v in json_data.items():
-                                                k_lower = k.lower().replace("_", "")
-                                                for default_k in DEFAULT_ARERA_VALUES:
-                                                    if default_k.lower() == k_lower:
-                                                        try:
-                                                            data[default_k] = float(v)
-                                                        except (ValueError, TypeError):
-                                                            pass
-                                                if k_lower in ("today", "data", "date", "aggiornamento", "period"):
-                                                    data["today"] = str(v)
-                                                    data["period"] = str(v)
-                                            data["source_url"] = target_url
-                                            stg_success = True
-                                            break
-                                    except Exception as json_err:
-                                        raise ValueError(
-                                            f"Formato non supportato o JSON non valido: {json_err}"
-                                        ) from json_err
+                                raise ValueError(f"Contenuto da {target_url} non valido (non XLSX e non JSON)")
                 except Exception as err:
-                    last_stg_error = err
+                    last_stg_error = f"{type(err).__name__}: {err}"
                     _LOGGER.debug("Errore download/parsing Luce da %s: %s", target_url, err)
 
             if not stg_success:
                 raise UpdateFailed(
-                    f"Impossibile acquisire le tariffe Luce ARERA dalla rete. Ultimo errore: {last_stg_error}"
+                    f"Impossibile acquisire le tariffe Luce ARERA dalla rete. Dettaglio: {last_stg_error or 'Nessun URL raggiungibile'}"
                 )
 
             # Acquisizione componente DispBT da file SMT
             if self.source_type == SOURCE_TYPE_ARERA_XLSX:
                 smt_urls = get_arera_smt_urls()
                 smt_success = False
-                last_smt_error: Exception | None = None
+                last_smt_error: str | None = None
 
                 for smt_url in smt_urls:
                     try:
-                        async with async_timeout.timeout(20):
+                        _LOGGER.debug("Tentativo download parametro DispBT da %s", smt_url)
+                        async with async_timeout(30):
                             async with session.get(smt_url, headers=headers) as smt_resp:
-                                if smt_resp.status == 200:
-                                    smt_content = await smt_resp.read()
-                                    if smt_content.startswith(b"PK  "):
-                                        smt_data = parse_arera_smt_xlsx(smt_content)
-                                        if "dispbt" in smt_data:
-                                            data["dispbt"] = smt_data["dispbt"]
-                                            data["dispbt_source_url"] = smt_url
-                                            data["smt_sheet"] = smt_data.get("smt_sheet")
-                                            smt_success = True
-                                            _LOGGER.info(
-                                                "DispBT ARERA (%s €/anno) acquisito con successo da %s",
-                                                data["dispbt"],
-                                                smt_url,
-                                            )
-                                            break
+                                if smt_resp.status != 200:
+                                    raise ValueError(f"HTTP status {smt_resp.status} da {smt_url}")
+                                smt_content = await smt_resp.read()
+                                if smt_content.startswith(b"PK") or ".xlsx" in smt_url.lower():
+                                    smt_data = parse_arera_smt_xlsx(smt_content)
+                                    if "dispbt" in smt_data:
+                                        data["dispbt"] = smt_data["dispbt"]
+                                        data["dispbt_source_url"] = smt_url
+                                        data["smt_sheet"] = smt_data.get("smt_sheet")
+                                        smt_success = True
+                                        _LOGGER.info(
+                                            "DispBT ARERA (%s €/anno) acquisito con successo da %s (%s)",
+                                            data["dispbt"],
+                                            smt_url,
+                                            data.get("smt_sheet"),
+                                        )
+                                        break
+                                else:
+                                    raise ValueError(f"Risposta da {smt_url} non in formato Excel valido")
                     except Exception as smt_err:
-                        last_smt_error = smt_err
+                        last_smt_error = f"{type(smt_err).__name__}: {smt_err}"
                         _LOGGER.debug("Errore recupero SMT da %s: %s", smt_url, smt_err)
 
                 if not smt_success and "dispbt" not in data:
                     raise UpdateFailed(
-                        f"Impossibile acquisire il parametro DispBT da SMT ARERA: {last_smt_error}"
+                        f"Impossibile acquisire il parametro DispBT da SMT ARERA: {last_smt_error or 'Nessun file SMT valido'}"
                     )
 
         # 3. Acquisizione Tariffe Gas Naturale
         if self.service_type in (SERVICE_TYPE_GAS, SERVICE_TYPE_BOTH):
             gas_success = False
-            last_gas_error: Exception | None = None
+            last_gas_error: str | None = None
             gas_urls = get_arera_gas_urls()
 
             for gas_url in gas_urls:
                 try:
                     _LOGGER.debug("Tentativo download tariffe Gas ARERA da %s", gas_url)
-                    async with async_timeout.timeout(30):
+                    async with async_timeout(30):
                         async with session.get(gas_url, headers=headers) as gas_resp:
-                            if gas_resp.status == 200:
-                                gas_content = await gas_resp.read()
-                                if gas_content.startswith(b"PK  "):
-                                    gas_data = parse_arera_gas_xlsx(
-                                        gas_content,
-                                        ambito_key=self.gas_ambito,
-                                        scaglione_key=self.gas_scaglione,
-                                    )
-                                    data.update(gas_data)
-                                    data["gas_source_url"] = gas_url
-                                    gas_success = True
-                                    _LOGGER.info(
-                                        "Tariffe Gas ARERA scaricate con successo da %s (%s, ambito: %s)",
-                                        gas_url,
-                                        gas_data.get("gas_periodo", ""),
-                                        self.gas_ambito,
-                                    )
-                                    break
+                            if gas_resp.status != 200:
+                                raise ValueError(f"HTTP status {gas_resp.status} da {gas_url}")
+                            gas_content = await gas_resp.read()
+                            if gas_content.startswith(b"PK") or ".xlsx" in gas_url.lower():
+                                gas_data = parse_arera_gas_xlsx(
+                                    gas_content,
+                                    ambito_key=self.gas_ambito,
+                                    scaglione_key=self.gas_scaglione,
+                                )
+                                data.update(gas_data)
+                                data["gas_source_url"] = gas_url
+                                gas_success = True
+                                _LOGGER.info(
+                                    "Tariffe Gas ARERA scaricate con successo da %s (%s, ambito: %s)",
+                                    gas_url,
+                                    gas_data.get("gas_periodo", ""),
+                                    self.gas_ambito,
+                                )
+                                break
+                            else:
+                                raise ValueError(f"Risposta da {gas_url} non in formato Excel valido")
                 except Exception as g_err:
-                    last_gas_error = g_err
+                    last_gas_error = f"{type(g_err).__name__}: {g_err}"
                     _LOGGER.debug("Errore download/parsing Gas da %s: %s", gas_url, g_err)
 
             if not gas_success:
                 raise UpdateFailed(
-                    f"Impossibile acquisire le tariffe Gas ARERA dalla rete. Ultimo errore: {last_gas_error}"
+                    f"Impossibile acquisire le tariffe Gas ARERA dalla rete. Dettaglio: {last_gas_error or 'Nessun file Gas valido'}"
                 )
 
         # 4. Sovrascritture manuali (se specificate nelle opzioni per le chiavi luce)

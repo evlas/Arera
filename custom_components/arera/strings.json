@@ -2,72 +2,85 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure ARERA Tariffs (Electricity & Gas)",
-        "description": "Select the utility supplies to monitor. ARERA tariffs will be automatically downloaded and parsed from official tables online.",
+        "title": "Configura ARERA Tariffe",
+        "description": "Seleziona la fornitura da monitorare. Puoi creare una configurazione per l'Energia Elettrica, una per il Gas Naturale o entrambe aggiungendo l'integrazione due volte.",
         "data": {
-          "service_type": "Utility Service (Electricity, Gas or Both)",
-          "gas_ambito": "Gas Geographic Area (Ambito)",
-          "gas_scaglione": "Annual Gas Consumption Bracket",
-          "source_type": "Data Source",
-          "scan_interval": "Update frequency (hours)"
+          "service_type": "Servizio di Fornitura"
+        }
+      },
+      "electricity": {
+        "title": "Configura Tariffe Energia Elettrica",
+        "description": "I parametri e le tariffe della luce ARERA verranno scaricati e aggiornati automaticamente dalle tabelle ufficiali online.",
+        "data": {
+          "source_type": "Sorgente Dati",
+          "scan_interval": "Frequenza di aggiornamento (ore)"
+        }
+      },
+      "gas": {
+        "title": "Configura Tariffe Gas Naturale",
+        "description": "Seleziona il tuo ambito geografico e lo scaglione annuo di consumo. Le componenti tariffarie verranno calcolate automaticamente.",
+        "data": {
+          "gas_ambito": "Ambito Geografico Gas",
+          "gas_scaglione": "Scaglione di Consumo Annuo Gas",
+          "source_type": "Sorgente Dati",
+          "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to download or parse data from source",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Impossibile scaricare o elaborare i dati dalla sorgente",
+      "invalid_auth": "Autenticazione non valida",
+      "unknown": "Errore imprevisto"
     },
     "abort": {
-      "already_configured": "This ARERA configuration already exists in Home Assistant"
+      "already_configured": "Questa fornitura ARERA è già configurata in Home Assistant"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "ARERA Tariffs Options",
-        "description": "Modify the monitored utility service, gas geographic area or update frequency.",
+        "title": "Opzioni ARERA Tariffe",
+        "description": "Modifica i parametri di configurazione della fornitura.",
         "data": {
-          "service_type": "Utility Service",
-          "gas_ambito": "Gas Geographic Area (Ambito)",
-          "gas_scaglione": "Annual Gas Consumption Bracket",
-          "scan_interval": "Update frequency (hours)"
+          "gas_ambito": "Ambito Geografico Gas",
+          "gas_scaglione": "Scaglione di Consumo Annuo Gas",
+          "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       }
     }
   },
   "entity": {
     "sensor": {
-      "s1": { "name": "Fixed transport fee (s1)" },
-      "s2": { "name": "Power capacity transport fee (s2)" },
-      "s3": { "name": "Energy volume transport fee (s3)" },
-      "uc3": { "name": "Equalization UC3" },
-      "uc6qe": { "name": "UC6 energy rate" },
-      "uc6qp": { "name": "UC6 capacity rate" },
-      "asos": { "name": "Renewable system charge (ASOS)" },
-      "arim": { "name": "Remaining system charges (ARIM)" },
-      "dispbt": { "name": "Dispatch component DispBT" },
-      "cdispd": { "name": "Domestic wholesale dispatching CDISPD" },
-      "csed": { "name": "Efficient balancing CSED" },
-      "cpstgd": { "name": "Gradual protections equalization CPSTGD" },
-      "parametrolamda": { "name": "Lambda parameter" },
-      "today": { "name": "Electricity tariff reference period" },
-      "gas_cmemm": { "name": "Gas raw commodity price (CMEMm)" },
-      "gas_ccr": { "name": "Gas wholesale procurement fee (CCR)" },
-      "gas_qvd_variabile": { "name": "Gas retail sale variable fee (QVDv)" },
-      "gas_tau3": { "name": "Gas distribution and metering variable (tau3)" },
-      "gas_qt": { "name": "Gas transport component (QT)" },
-      "gas_rs": { "name": "Gas service quality component (RS)" },
-      "gas_ug1": { "name": "Gas equalization component (UG1)" },
-      "gas_re": { "name": "Gas energy efficiency charge (RE)" },
-      "gas_ug2_variabile": { "name": "Gas retail compensation variable (UG2v)" },
-      "gas_ug3": { "name": "Gas unpaid bills recovery (UG3)" },
-      "gas_totale_variabile": { "name": "Gas total variable rate" },
-      "gas_qvd_fissa": { "name": "Gas retail sale fixed fee (QVDf)" },
-      "gas_tau1": { "name": "Gas distribution and metering fixed fee (tau1)" },
-      "gas_ug2_fissa": { "name": "Gas retail compensation fixed fee (UG2f)" },
-      "gas_totale_fissa": { "name": "Gas total fixed fee" },
-      "gas_periodo": { "name": "Gas tariff reference period" }
+      "s1": { "name": "Quota fissa trasporto (s1)" },
+      "s2": { "name": "Quota potenza trasporto (s2)" },
+      "s3": { "name": "Quota energia trasporto (s3)" },
+      "uc3": { "name": "Perequazione UC3" },
+      "uc6qe": { "name": "UC6 quota energia" },
+      "uc6qp": { "name": "UC6 quota potenza" },
+      "asos": { "name": "Oneri rinnovabili (ASOS)" },
+      "arim": { "name": "Altri oneri di sistema (ARIM)" },
+      "dispbt": { "name": "Componente di dispacciamento DispBT" },
+      "cdispd": { "name": "Dispacciamento domestici CDISPD" },
+      "csed": { "name": "Sbilanciamento efficiente CSED" },
+      "cpstgd": { "name": "Perequazione tutele graduali CPSTGD" },
+      "parametrolamda": { "name": "Parametro lambda" },
+      "today": { "name": "Periodo tariffe luce" },
+      "gas_cmemm": { "name": "Prezzo materia prima gas (CMEMm)" },
+      "gas_ccr": { "name": "Approvvigionamento gas (CCR)" },
+      "gas_qvd_variabile": { "name": "Vendita dettaglio quota variabile (QVDv)" },
+      "gas_tau3": { "name": "Distribuzione e misura variabile (τ3)" },
+      "gas_qt": { "name": "Trasporto gas (QT)" },
+      "gas_rs": { "name": "Qualità del servizio gas (RS)" },
+      "gas_ug1": { "name": "Perequazione gas (UG1)" },
+      "gas_re": { "name": "Risparmio energetico gas (RE)" },
+      "gas_ug2_variabile": { "name": "Oneri commercializzazione variabile (UG2v)" },
+      "gas_ug3": { "name": "Recupero morosità gas (UG3)" },
+      "gas_totale_variabile": { "name": "Totale quota variabile gas" },
+      "gas_qvd_fissa": { "name": "Vendita dettaglio quota fissa (QVDf)" },
+      "gas_tau1": { "name": "Distribuzione e misura quota fissa (τ1)" },
+      "gas_ug2_fissa": { "name": "Oneri commercializzazione quota fissa (UG2f)" },
+      "gas_totale_fissa": { "name": "Totale quota fissa gas" },
+      "gas_periodo": { "name": "Periodo tariffe gas" }
     }
   }
 }

@@ -56,14 +56,14 @@ L'utente può scegliere di configurare **solo la Luce**, **solo il Gas** oppure 
 ## ⚙️ Configurazione
 
 1. In Home Assistant, vai su **Impostazioni** -> **Dispositivi e Servizi** -> **Aggiungi Integrazione**.
-2. Cerca **ARERA Tariffe Luce e Gas**.
-3. Seleziona la fornitura desiderata:
-   - **Entrambe (Luce & Gas)** *(Consigliato)*
-   - **Solo Energia Elettrica (Luce)**
-   - **Solo Gas Naturale**
-4. Se hai selezionato il Gas, indica il tuo **Ambito Geografico** (es. *Nord Orientale*) e lo **Scaglione di Consumo** (predefinito: *Scaglione 3: da 481 a 1.560 Smc/anno* per riscaldamento autonomo).
-5. Seleziona la sorgente (Tabelle Ufficiali ARERA online, URL Personalizzato, oppure Manuale).
-6. Frequenza di aggiornamento (default: `24` ore).
+2. Cerca **ARERA Tariffe**.
+3. Seleziona il servizio che desideri configurare:
+   - **Energia Elettrica**
+   - **Gas Naturale**
+4. Completa la configurazione del servizio scelto:
+   - Per l'**Energia Elettrica**: seleziona la sorgente dati (predefinito: *Tabelle Ufficiali ARERA Online*) e l'intervallo di aggiornamento.
+   - Per il **Gas Naturale**: indica il tuo **Ambito Geografico** (es. *Nord Orientale*) e lo **Scaglione di Consumo Annuo** (predefinito: *Scaglione 3: da 481 a 1.560 Smc/anno* per riscaldamento autonomo).
+5. Se desideri monitorare **entrambe le forniture**, ti basterà ripetere la procedura cliccando nuovamente su *Aggiungi Integrazione* e selezionando l'altro servizio. Home Assistant creerà due istanze pulite e dedicate con i rispettivi dispositivi e sensori.
 
 ---
 

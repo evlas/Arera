@@ -1,4 +1,4 @@
-"""Config Flow per ARERA Tariffe (Luce e Gas)."""
+"""Config Flow per ARERA Tariffe (Energia Elettrica o Gas Naturale)."""
 from __future__ import annotations
 
 from typing import Any
@@ -23,9 +23,9 @@ from .const import (
     DOMAIN,
     GAS_AMBITI,
     GAS_SCAGLIONI,
-    SERVICE_TYPE_BOTH,
     SERVICE_TYPE_ELECTRICITY,
     SERVICE_TYPE_GAS,
+    SERVICES_OPTIONS,
     SOURCE_TYPE_ARERA_XLSX,
     SOURCE_TYPE_CUSTOM_URL,
     SOURCE_TYPE_MANUAL,
@@ -34,53 +34,106 @@ from .const import (
 
 
 class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Gestione del Config Flow per ARERA Luce e Gas."""
+    """Gestione del Config Flow per ARERA."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Inizializza il flow."""
+        self._service_type: str = SERVICE_TYPE_ELECTRICITY
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Primo step: scelta servizio (Luce, Gas o Entrambe) e configurazione iniziale."""
+        """Primo step: scelta del servizio (Energia Elettrica o Gas Naturale)."""
+        if user_input is not None:
+            self._service_type = user_input[CONF_SERVICE_TYPE]
+            if self._service_type == SERVICE_TYPE_GAS:
+                return await self.async_step_gas()
+            return await self.async_step_electricity()
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SERVICE_TYPE, default=SERVICE_TYPE_ELECTRICITY
+                ): vol.In(SERVICES_OPTIONS),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+        )
+
+    async def async_step_electricity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configurazione per l'Energia Elettrica."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            service_type = user_input.get(CONF_SERVICE_TYPE, SERVICE_TYPE_ELECTRICITY)
-            unique_id = f"arera_tariffe_{service_type}"
+            unique_id = "arera_tariffe_electricity"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
-            # URL predefinito per la luce
+            user_input[CONF_SERVICE_TYPE] = SERVICE_TYPE_ELECTRICITY
             if user_input.get(CONF_SOURCE_TYPE) == SOURCE_TYPE_ARERA_XLSX:
                 user_input[CONF_URL] = get_arera_stg_urls()[0]
 
-            if service_type == SERVICE_TYPE_GAS:
-                title = "ARERA Tariffe Gas"
-            elif service_type == SERVICE_TYPE_BOTH:
-                title = "ARERA Tariffe Luce & Gas"
-            else:
-                title = "ARERA Tariffe Luce"
-
             return self.async_create_entry(
-                title=title,
+                title="ARERA Tariffe Energia Elettrica",
                 data=user_input,
             )
 
         data_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_SERVICE_TYPE, default=SERVICE_TYPE_BOTH
+                    CONF_SOURCE_TYPE, default=SOURCE_TYPE_ARERA_XLSX
                 ): vol.In(
                     {
-                        SERVICE_TYPE_BOTH: "Entrambe (Luce & Gas)",
-                        SERVICE_TYPE_ELECTRICITY: "Solo Energia Elettrica (Luce)",
-                        SERVICE_TYPE_GAS: "Solo Gas Naturale",
+                        SOURCE_TYPE_ARERA_XLSX: "Tabelle Ufficiali ARERA Online (.xlsx)",
+                        SOURCE_TYPE_CUSTOM_URL: "URL Personalizzato (JSON o Excel)",
+                        SOURCE_TYPE_MANUAL: "Valori Ufficiali Predefiniti / Manuale",
                     }
                 ),
                 vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL_HOURS
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=168)),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="electricity",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_gas(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configurazione per il Gas Naturale."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            unique_id = "arera_tariffe_gas"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+            user_input[CONF_SERVICE_TYPE] = SERVICE_TYPE_GAS
+            if user_input.get(CONF_SOURCE_TYPE) == SOURCE_TYPE_ARERA_XLSX:
+                user_input[CONF_URL] = "https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/G2026_stv.xlsx"
+
+            return self.async_create_entry(
+                title="ARERA Tariffe Gas Naturale",
+                data=user_input,
+            )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
                     CONF_GAS_AMBITO, default=DEFAULT_GAS_AMBITO
                 ): vol.In(GAS_AMBITI),
-                vol.Optional(
+                vol.Required(
                     CONF_GAS_SCAGLIONE, default=DEFAULT_GAS_SCAGLIONE
                 ): vol.In(GAS_SCAGLIONI),
                 vol.Required(
@@ -99,7 +152,7 @@ class AreraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="gas",
             data_schema=data_schema,
             errors=errors,
         )
@@ -134,40 +187,28 @@ class AreraOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Gestisce le opzioni modificabili."""
+        """Gestisce le opzioni modificabili in base al servizio dell'entry."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         entry = self.config_entry
-        service_type = entry.options.get(
-            CONF_SERVICE_TYPE, entry.data.get(CONF_SERVICE_TYPE, SERVICE_TYPE_ELECTRICITY)
-        )
-        current_ambito = entry.options.get(
-            CONF_GAS_AMBITO, entry.data.get(CONF_GAS_AMBITO, DEFAULT_GAS_AMBITO)
-        )
-        current_scaglione = entry.options.get(
-            CONF_GAS_SCAGLIONE, entry.data.get(CONF_GAS_SCAGLIONE, DEFAULT_GAS_SCAGLIONE)
-        )
+        service_type = entry.data.get(CONF_SERVICE_TYPE, SERVICE_TYPE_ELECTRICITY)
         current_scan = entry.options.get(
             CONF_SCAN_INTERVAL,
             entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_HOURS),
         )
 
-        schema_dict: dict[Any, Any] = {
-            vol.Required(
-                CONF_SERVICE_TYPE, default=service_type
-            ): vol.In(
-                {
-                    SERVICE_TYPE_BOTH: "Entrambe (Luce & Gas)",
-                    SERVICE_TYPE_ELECTRICITY: "Solo Energia Elettrica (Luce)",
-                    SERVICE_TYPE_GAS: "Solo Gas Naturale",
-                }
-            ),
-        }
+        schema_dict: dict[Any, Any] = {}
 
-        # Campi gas se il servizio include gas
-        schema_dict[vol.Optional(CONF_GAS_AMBITO, default=current_ambito)] = vol.In(GAS_AMBITI)
-        schema_dict[vol.Optional(CONF_GAS_SCAGLIONE, default=current_scaglione)] = vol.In(GAS_SCAGLIONI)
+        if service_type == SERVICE_TYPE_GAS:
+            current_ambito = entry.options.get(
+                CONF_GAS_AMBITO, entry.data.get(CONF_GAS_AMBITO, DEFAULT_GAS_AMBITO)
+            )
+            current_scaglione = entry.options.get(
+                CONF_GAS_SCAGLIONE, entry.data.get(CONF_GAS_SCAGLIONE, DEFAULT_GAS_SCAGLIONE)
+            )
+            schema_dict[vol.Required(CONF_GAS_AMBITO, default=current_ambito)] = vol.In(GAS_AMBITI)
+            schema_dict[vol.Required(CONF_GAS_SCAGLIONE, default=current_scaglione)] = vol.In(GAS_SCAGLIONI)
 
         schema_dict[
             vol.Optional(

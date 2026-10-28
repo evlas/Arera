@@ -14,6 +14,11 @@ SERVICE_TYPE_ELECTRICITY = "electricity"
 SERVICE_TYPE_GAS = "gas"
 SERVICE_TYPE_BOTH = "both"
 
+SERVICES_OPTIONS = {
+    SERVICE_TYPE_ELECTRICITY: "Energia Elettrica",
+    SERVICE_TYPE_GAS: "Gas Naturale",
+}
+
 SOURCE_TYPE_ARERA_XLSX = "arera_xlsx"
 SOURCE_TYPE_CUSTOM_URL = "custom_url"
 SOURCE_TYPE_MANUAL = "manual"

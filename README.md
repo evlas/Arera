@@ -48,13 +48,14 @@ Users can configure **Electricity only**, **Natural Gas only**, or **Both (Dual 
 ## ⚙️ Configuration
 
 1. Go to **Settings** -> **Devices & Services** -> **Add Integration**.
-2. Search for **ARERA Tariffe Luce e Gas**.
-3. Select your utility supply:
-   - **Both (Electricity & Gas)** *(Recommended)*
-   - **Electricity only**
-   - **Natural Gas only**
-4. If Gas is enabled, choose your **Geographic Area** and **Annual Consumption Bracket**.
-5. Set the polling frequency (default: `24` hours).
+2. Search for **ARERA Tariffe**.
+3. Select the utility supply to configure:
+   - **Electricity**
+   - **Natural Gas**
+4. Complete the configuration:
+   - For **Electricity**: select data source (default: *Official ARERA Online Tables*) and scan interval.
+   - For **Natural Gas**: select your **Geographic Area** and **Annual Consumption Bracket**.
+5. To monitor **both supplies**, simply repeat the process and add a second integration entry for the other utility. Home Assistant will create two clean and dedicated devices with their respective sensors.
 
 ---
 
