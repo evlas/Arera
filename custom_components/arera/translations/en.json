@@ -13,6 +13,7 @@
         "description": "ARERA electricity tariffs and parameters will be automatically downloaded and parsed from official tables online.",
         "data": {
           "source_type": "Data Source",
+          "url": "Custom URL (only when Data Source = Custom URL)",
           "scan_interval": "Update frequency (hours)"
         }
       },
@@ -23,6 +24,7 @@
           "gas_ambito": "Gas Geographic Area (Ambito)",
           "gas_scaglione": "Annual Gas Consumption Bracket",
           "source_type": "Data Source",
+          "url": "Custom URL (only when Data Source = Custom URL)",
           "scan_interval": "Update frequency (hours)"
         }
       }
@@ -30,6 +32,7 @@
     "error": {
       "cannot_connect": "Failed to download or parse data from source",
       "invalid_auth": "Invalid authentication",
+      "invalid_url": "Please enter a valid URL (http:// or https://) for the custom data source",
       "unknown": "Unexpected error"
     },
     "abort": {
@@ -44,8 +47,47 @@
         "data": {
           "gas_ambito": "Gas Geographic Area (Ambito)",
           "gas_scaglione": "Annual Gas Consumption Bracket",
+          "source_type": "Data Source",
+          "url": "Custom URL (only when Data Source = Custom URL)",
           "scan_interval": "Update frequency (hours)"
         }
+      }
+    },
+    "error": {
+      "invalid_url": "Please enter a valid URL (http:// or https://) for the custom data source"
+    }
+  },
+  "selector": {
+    "service_type": {
+      "options": {
+        "electricity": "Electricity",
+        "gas": "Natural Gas"
+      }
+    },
+    "source_type": {
+      "options": {
+        "arera_xlsx": "Official ARERA Online Tables (.xlsx)",
+        "custom_url": "Custom URL (JSON or Excel)",
+        "manual": "Official Default Values / Manual"
+      }
+    },
+    "gas_ambito": {
+      "options": {
+        "nord_occidentale": "North-West (Piedmont, Aosta Valley, Liguria)",
+        "nord_orientale": "North-East (Lombardy, Veneto, Trentino-S.T., Friuli-V.G., Emilia-Romagna)",
+        "centrale": "Central (Tuscany, Umbria, Marche)",
+        "centro_sud_orientale": "Central-South East (Abruzzo, Molise, Apulia, Basilicata)",
+        "centro_sud_occidentale": "Central-South West (Lazio, Campania)",
+        "meridionale": "Southern (Calabria, Sicily)",
+        "sardegna": "Sardinia"
+      }
+    },
+    "gas_scaglione": {
+      "options": {
+        "scaglione_1": "Bracket 1: 0 to 120 Smc/year (cooking)",
+        "scaglione_2": "Bracket 2: 121 to 480 Smc/year (cooking + hot water)",
+        "scaglione_3": "Bracket 3: 481 to 1,560 Smc/year (independent heating)",
+        "scaglione_4": "Bracket 4: 1,561 to 5,000 Smc/year (high consumption)"
       }
     }
   },

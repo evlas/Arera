@@ -1,16 +1,15 @@
 """DataUpdateCoordinator per ARERA Tariffe (Luce e Gas)."""
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
+import json
 import logging
 from typing import Any
-
-import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+import homeassistant.util.dt as dt_util
 
 try:
     from asyncio import timeout as async_timeout
@@ -34,7 +33,6 @@ from .const import (
     SERVICE_TYPE_ELECTRICITY,
     SERVICE_TYPE_GAS,
     SOURCE_TYPE_ARERA_XLSX,
-    SOURCE_TYPE_CUSTOM_URL,
     SOURCE_TYPE_MANUAL,
     get_arera_gas_urls,
     get_arera_smt_urls,
@@ -55,7 +53,9 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.service_type = config_entry.options.get(
             CONF_SERVICE_TYPE, config_entry.data.get(CONF_SERVICE_TYPE, SERVICE_TYPE_ELECTRICITY)
         )
-        self.source_type = config_entry.data.get(CONF_SOURCE_TYPE, SOURCE_TYPE_ARERA_XLSX)
+        self.source_type = config_entry.options.get(
+            CONF_SOURCE_TYPE, config_entry.data.get(CONF_SOURCE_TYPE, SOURCE_TYPE_ARERA_XLSX)
+        )
         self.gas_ambito = config_entry.options.get(
             CONF_GAS_AMBITO, config_entry.data.get(CONF_GAS_AMBITO, DEFAULT_GAS_AMBITO)
         )
@@ -79,6 +79,7 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Recupera i dati da ARERA via web per Luce o Gas."""
+        current_year = dt_util.now().year
         data: dict[str, Any] = {
             "service_type": self.service_type,
             "gas_ambito": self.gas_ambito,
@@ -108,7 +109,7 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             last_stg_error: str | None = None
 
             if self.source_type == SOURCE_TYPE_ARERA_XLSX:
-                urls_to_try = get_arera_stg_urls()
+                urls_to_try = get_arera_stg_urls(current_year)
                 configured_url = self.entry.options.get(CONF_URL, self.entry.data.get(CONF_URL))
                 if configured_url and configured_url not in urls_to_try and ".xlsx" in configured_url.lower():
                     urls_to_try.insert(0, configured_url)
@@ -124,7 +125,9 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 raise ValueError(f"HTTP status {response.status} da {target_url}")
                             content = await response.read()
                             if content.startswith(b"PK") or ".xlsx" in target_url.lower():
-                                parsed = parse_arera_xlsx(content)
+                                parsed = await self.hass.async_add_executor_job(
+                                    parse_arera_xlsx, content
+                                )
                                 data.update(parsed)
                                 data["source_url"] = target_url
                                 stg_success = True
@@ -136,8 +139,6 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 break
                             else:
                                 # Prova formato JSON
-                                import json
-
                                 json_data = json.loads(content.decode("utf-8", errors="ignore"))
                                 if isinstance(json_data, dict):
                                     for k, v in json_data.items():
@@ -166,7 +167,7 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # Acquisizione componente DispBT da file SMT
             if self.source_type == SOURCE_TYPE_ARERA_XLSX:
-                smt_urls = get_arera_smt_urls()
+                smt_urls = get_arera_smt_urls(current_year)
                 smt_success = False
                 last_smt_error: str | None = None
 
@@ -179,7 +180,9 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                     raise ValueError(f"HTTP status {smt_resp.status} da {smt_url}")
                                 smt_content = await smt_resp.read()
                                 if smt_content.startswith(b"PK") or ".xlsx" in smt_url.lower():
-                                    smt_data = parse_arera_smt_xlsx(smt_content)
+                                    smt_data = await self.hass.async_add_executor_job(
+                                        parse_arera_smt_xlsx, smt_content
+                                    )
                                     if "dispbt" in smt_data:
                                         data["dispbt"] = smt_data["dispbt"]
                                         data["dispbt_source_url"] = smt_url
@@ -207,7 +210,13 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.service_type in (SERVICE_TYPE_GAS, SERVICE_TYPE_BOTH):
             gas_success = False
             last_gas_error: str | None = None
-            gas_urls = get_arera_gas_urls()
+            if self.source_type == SOURCE_TYPE_ARERA_XLSX:
+                gas_urls = get_arera_gas_urls(current_year)
+                configured_url = self.entry.options.get(CONF_URL, self.entry.data.get(CONF_URL))
+                if configured_url and configured_url not in gas_urls and "g" in configured_url.lower() and ".xlsx" in configured_url.lower():
+                    gas_urls.insert(0, configured_url)
+            else:
+                gas_urls = [self.url]
 
             for gas_url in gas_urls:
                 try:
@@ -218,10 +227,11 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 raise ValueError(f"HTTP status {gas_resp.status} da {gas_url}")
                             gas_content = await gas_resp.read()
                             if gas_content.startswith(b"PK") or ".xlsx" in gas_url.lower():
-                                gas_data = parse_arera_gas_xlsx(
+                                gas_data = await self.hass.async_add_executor_job(
+                                    parse_arera_gas_xlsx,
                                     gas_content,
-                                    ambito_key=self.gas_ambito,
-                                    scaglione_key=self.gas_scaglione,
+                                    self.gas_ambito,
+                                    self.gas_scaglione,
                                 )
                                 data.update(gas_data)
                                 data["gas_source_url"] = gas_url
@@ -234,7 +244,22 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                 )
                                 break
                             else:
-                                raise ValueError(f"Risposta da {gas_url} non in formato Excel valido")
+                                json_data = json.loads(gas_content.decode("utf-8", errors="ignore"))
+                                if isinstance(json_data, dict):
+                                    for k, v in json_data.items():
+                                        k_lower = k.lower()
+                                        for default_k in DEFAULT_ARERA_GAS_VALUES:
+                                            if default_k.lower() == k_lower or default_k.replace("gas_", "") == k_lower:
+                                                try:
+                                                    data[default_k] = float(v)
+                                                except (ValueError, TypeError):
+                                                    pass
+                                        if k_lower in ("gas_periodo", "periodo", "period", "today", "data"):
+                                            data["gas_periodo"] = str(v)
+                                    data["gas_source_url"] = gas_url
+                                    gas_success = True
+                                    break
+                                raise ValueError(f"Risposta da {gas_url} non in formato Excel o JSON valido")
                 except Exception as g_err:
                     last_gas_error = f"{type(g_err).__name__}: {g_err}"
                     _LOGGER.debug("Errore download/parsing Gas da %s: %s", gas_url, g_err)
@@ -244,13 +269,13 @@ class AreraDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Impossibile acquisire le tariffe Gas ARERA dalla rete. Dettaglio: {last_gas_error or 'Nessun file Gas valido'}"
                 )
 
-        # 4. Sovrascritture manuali (se specificate nelle opzioni per le chiavi luce)
-        for key in DEFAULT_ARERA_VALUES:
+        # 4. Sovrascritture manuali (se specificate nelle opzioni per le chiavi luce o gas)
+        for key in (*DEFAULT_ARERA_VALUES, *DEFAULT_ARERA_GAS_VALUES):
             if key in self.entry.options:
                 try:
                     data[key] = float(self.entry.options[key])
                 except (ValueError, TypeError):
                     pass
 
-        data["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        data["last_update"] = dt_util.now().strftime("%Y-%m-%d %H:%M")
         return data

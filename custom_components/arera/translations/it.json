@@ -13,6 +13,7 @@
         "description": "I parametri e le tariffe della luce ARERA verranno scaricati e aggiornati automaticamente dalle tabelle ufficiali online.",
         "data": {
           "source_type": "Sorgente Dati",
+          "url": "URL Personalizzato (solo se Sorgente Dati = URL Personalizzato)",
           "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       },
@@ -23,6 +24,7 @@
           "gas_ambito": "Ambito Geografico Gas",
           "gas_scaglione": "Scaglione di Consumo Annuo Gas",
           "source_type": "Sorgente Dati",
+          "url": "URL Personalizzato (solo se Sorgente Dati = URL Personalizzato)",
           "scan_interval": "Frequenza di aggiornamento (ore)"
         }
       }
@@ -30,6 +32,7 @@
     "error": {
       "cannot_connect": "Impossibile scaricare o elaborare i dati dalla sorgente",
       "invalid_auth": "Autenticazione non valida",
+      "invalid_url": "Inserisci un URL valido (http:// o https://) per la sorgente personalizzata",
       "unknown": "Errore imprevisto"
     },
     "abort": {
@@ -44,8 +47,47 @@
         "data": {
           "gas_ambito": "Ambito Geografico Gas",
           "gas_scaglione": "Scaglione di Consumo Annuo Gas",
+          "source_type": "Sorgente Dati",
+          "url": "URL Personalizzato (solo se Sorgente Dati = URL Personalizzato)",
           "scan_interval": "Frequenza di aggiornamento (ore)"
         }
+      }
+    },
+    "error": {
+      "invalid_url": "Inserisci un URL valido (http:// o https://) per la sorgente personalizzata"
+    }
+  },
+  "selector": {
+    "service_type": {
+      "options": {
+        "electricity": "Energia Elettrica",
+        "gas": "Gas Naturale"
+      }
+    },
+    "source_type": {
+      "options": {
+        "arera_xlsx": "Tabelle Ufficiali ARERA Online (.xlsx)",
+        "custom_url": "URL Personalizzato (JSON o Excel)",
+        "manual": "Valori Ufficiali Predefiniti / Manuale"
+      }
+    },
+    "gas_ambito": {
+      "options": {
+        "nord_occidentale": "Nord Occidentale (Piemonte, Valle d'Aosta, Liguria)",
+        "nord_orientale": "Nord Orientale (Lombardia, Veneto, Trentino-A.A., Friuli-V.G., Emilia-Romagna)",
+        "centrale": "Centrale (Toscana, Umbria, Marche)",
+        "centro_sud_orientale": "Centro-Sud Orientale (Abruzzo, Molise, Puglia, Basilicata)",
+        "centro_sud_occidentale": "Centro-Sud Occidentale (Lazio, Campania)",
+        "meridionale": "Meridionale (Calabria, Sicilia)",
+        "sardegna": "Sardegna"
+      }
+    },
+    "gas_scaglione": {
+      "options": {
+        "scaglione_1": "Scaglione 1: da 0 a 120 Smc/anno (cottura)",
+        "scaglione_2": "Scaglione 2: da 121 a 480 Smc/anno (cottura + acqua calda)",
+        "scaglione_3": "Scaglione 3: da 481 a 1.560 Smc/anno (riscaldamento autonomo)",
+        "scaglione_4": "Scaglione 4: da 1.561 a 5.000 Smc/anno (bifamiliare / consumi elevati)"
       }
     }
   },

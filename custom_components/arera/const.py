@@ -63,7 +63,7 @@ def get_arera_smt_urls(year: int | None = None) -> list[str]:
     return [
         f"https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/E{year}-smt.xlsx",
         f"https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/E{year - 1}-smt.xlsx",
-        "https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/E2026-smt.xlsx",
+        f"https://www.arera.it/fileadmin/area_operatori/prezzi_e_tariffe/E{year - 2}-smt.xlsx",
     ]
 
 

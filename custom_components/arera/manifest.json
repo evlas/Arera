@@ -1,6 +1,6 @@
 {
   "domain": "arera",
-  "name": "ARERA Tariffe Luce",
+  "name": "ARERA Tariffe Luce e Gas",
   "codeowners": ["@evlas"],
   "config_flow": true,
   "documentation": "https://github.com/evlas/Arera",
